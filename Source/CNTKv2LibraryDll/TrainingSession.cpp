@@ -290,19 +290,18 @@ namespace CNTK
         {
             std::unordered_map<Variable, ValuePtr> minibatch;
             double accumulatedError = 0;
-            double error = 0;
             size_t totalNumberOfSamples = 0;
             size_t numberOfMinibatches = 0;
 
             auto checkpoint = m_cv.m_source->GetCheckpointState();
-            size_t sampleCount = 0;
-            while (GetCrossValidationMinibatch(minibatch, m_cv.m_mbSize[sampleCount], computeDevice), !minibatch.empty())
+            std::unordered_map<Variable, ValuePtr> outputs = {};
+            while (GetCrossValidationMinibatch(minibatch, m_cv.m_mbSize[totalNumberOfSamples], computeDevice), !minibatch.empty())
             {
                 // TODO: it may be slow to rely on TestMinibatch to return error each time, since it may require transfer
                 // of error from the GPU each time.
-                error = m_trainer->TestMinibatch(minibatch, computeDevice, sampleCount);
-                accumulatedError += error * sampleCount;
-                totalNumberOfSamples += sampleCount;
+                auto result = m_trainer->TestMinibatch(minibatch, outputs, computeDevice, false);
+                accumulatedError += result.first->AsScalar<double>();
+                totalNumberOfSamples += result.second;
                 numberOfMinibatches++;
             }
 
