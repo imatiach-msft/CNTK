@@ -7,8 +7,8 @@
 setlocal
 set allArgs=%*
 set installBatchDir=%~dp0
-set psInstall="%installBatchDir%\ps\install.ps1"
-set PSModulePath=%PSModulePath%;%installBatchDir%\ps\Modules
+set psInstall=%installBatchDir%ps\install.ps1
+set PSModulePath=%PSModulePath%;%installBatchDir%ps\Modules
 :loop
 if /I "%~1"=="-h" goto :helpMsg
 if /I "%~1"=="/h" goto :helpMsg
@@ -20,10 +20,18 @@ shift
 
 if not "%~1"=="" goto loop
 
-powershell -NoProfile -NoLogo -Command "Get-ChildItem %installBatchDir% -Include *.psm1,*.ps1 -recurse | unblock-file"
-powershell -NoProfile -NoLogo -ExecutionPolicy RemoteSigned %psInstall% %allArgs%
+powershell -NoProfile -NoLogo -Command "Get-ChildItem '%installBatchDir%' -Include *.psm1,*.ps1 -recurse -ErrorAction Stop | unblock-file -ErrorAction Stop"
+if ERRORLEVEL 1 goto errorUnblock
 
-goto :EOF
+powershell -NoProfile -NoLogo -ExecutionPolicy RemoteSigned %psInstall% %allArgs%
+if ERRORLEVEL 1 echo Installer reported an error!!
+goto finish
+
+
+:errorUnblock
+@echo. 
+@echo. Error encountered during UNBLOCK-FILE operartion
+goto finish
 
 :helpMsg
 @echo.
@@ -36,4 +44,5 @@ goto :EOF
 @echo     https://github.com/Microsoft/CNTK/wiki/Setup-Windows-Binary-Script-Options
 @echo.
 
+:finish
 endlocal
