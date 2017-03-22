@@ -20,7 +20,6 @@ namespace CNTK
         static const std::wstring DistributedAfterSampleCountAttributeName;
 
     public:
-        CompositeMinibatchSource(const Dictionary& configuration);
         CompositeMinibatchSource(const MinibatchSourceConfig& configuration);
 
         virtual const std::unordered_set<StreamInformation>& StreamInfos() override { return m_streamInfos; }

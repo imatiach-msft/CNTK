@@ -1415,7 +1415,7 @@ namespace CNTK
     ///
     /// A type denoting a dictionary (keyed by Unicode strings) of serializable values (dynamically typed).
     ///
-    class Dictionary final
+    class Dictionary
     {
         friend inline void AddConfigString(std::wstringstream& s, const DictionaryValue& value, size_t numIndentationSpaces);
         friend class CompositeMinibatchSource;
@@ -4532,7 +4532,7 @@ namespace CNTK
 
     typedef Dictionary Deserializer;
     
-    class MinibatchSourceConfig 
+    class MinibatchSourceConfig : public Dictionary
     {
 
     public:
@@ -4620,17 +4620,11 @@ namespace CNTK
         ///
         CNTK_API MinibatchSourceConfig& AddDeserializer(const Deserializer& deserializer);
 
-        const Dictionary& AsDictionary() const { return m_dict; }
-
-    private:
-        Dictionary m_dict;
+        ///
+        /// Adds a number of deserializers to be used in the composite reader.
+        ///
+        CNTK_API MinibatchSourceConfig& AddDeserializers(const std::vector<Deserializer>& deserializers);
     };
-
-
-    ///
-    /// Instantiate the CNTK built-in composite minibatch source.
-    ///
-    CNTK_API MinibatchSourcePtr CreateCompositeMinibatchSource(const Dictionary& configuration);
 
     ///
     /// Instantiate the CNTK built-in composite minibatch source.

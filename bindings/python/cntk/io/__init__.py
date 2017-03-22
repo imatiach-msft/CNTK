@@ -142,7 +142,7 @@ class MinibatchSource(cntk_py.MinibatchSource):
         elif deserializers is not None:
             config.add_deserializer(deserializers)
 
-        self.source = cntk_py.create_composite_minibatch_source(config)
+        self._source = cntk_py.create_composite_minibatch_source(config)
         self._streams = None
 
 
@@ -153,7 +153,7 @@ class MinibatchSource(cntk_py.MinibatchSource):
         Returns:
             A `list` of instances of :class:`~cntk.cntk_py.StreamInformation`
         '''
-        return self.source.stream_infos()
+        return self._source.stream_infos()
 
     @property
     def streams(self):
@@ -176,7 +176,7 @@ class MinibatchSource(cntk_py.MinibatchSource):
         Throws an exception if there are none or multiple streams with this
         same name.
         '''
-        return self.source.stream_info(name)
+        return self._source.stream_info(name)
 
     def __getitem__(self, name):
         '''
@@ -224,7 +224,7 @@ class MinibatchSource(cntk_py.MinibatchSource):
         if partition_index is None:
             partition_index = 0
 
-        mb = self.source.get_next_minibatch(0,
+        mb = self._source.get_next_minibatch(0,
                 minibatch_size_in_samples, num_data_partitions, partition_index, device)
 
         if not mb:
@@ -243,7 +243,7 @@ class MinibatchSource(cntk_py.MinibatchSource):
             cntk.cntk_py.Dictionary:
             A :class:`~cntk.cntk_py.Dictionary` that has the checkpoint state of the MinibatchSource
         '''
-        return self.source.get_checkpoint_state()
+        return self._source.get_checkpoint_state()
 
     def restore_from_checkpoint(self, checkpoint):
         '''
@@ -252,14 +252,14 @@ class MinibatchSource(cntk_py.MinibatchSource):
         Args:
             checkpoint (:class:`~cntk_py.Dictionary`): checkpoint to restore from
         '''
-        self.source.restore_from_checkpoint(checkpoint)
+        self._source.restore_from_checkpoint(checkpoint)
 
     @property
     def is_distributed(self):
         '''
         Whether the minibatch source is running distributed
         '''
-        return self.source.is_distributed()
+        return self._source.is_distributed()
 
     @property
     def current_position(self):
@@ -283,10 +283,10 @@ class MinibatchSource(cntk_py.MinibatchSource):
 
 
 class _MinibatchSource(MinibatchSource):
-    # this will eventually reaplace the multi-parameter __init__ 
+    # this will eventually replace the multi-parameter __init__ 
     # method of the parent, after which this class can be removed.
     def __init__(self, config):
-        self.source = cntk_py.create_composite_minibatch_source(config)
+        self._source = cntk_py.create_composite_minibatch_source(config)
         self._streams = None
 
 
@@ -419,6 +419,13 @@ class MinibatchSourceConfig(cntk_py.MinibatchSourceConfig):
         Specifies if the deserialization should be done on a single or multiple threads.
         '''
         super(MinibatchSourceConfig, self).set_multithreaded(value)
+        return self
+
+    def add_deserializers(self, values):
+        '''
+        Adds a number of deserializers to be used in the composite reader.
+        '''
+        super(MinibatchSourceConfig, self).add_deserializers(values)
         return self
 
     def add_deserializer(self, value):

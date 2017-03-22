@@ -73,7 +73,7 @@ bool Is1bitSGDAvailable()
     return is1bitSGDAvailable;
 }
 
-MinibatchSourcePtr CreateHTKMinibatchSource(size_t featureDim, size_t numOutputClasses, const Dictionary& readModeConfig, size_t epochSize, bool randomize = true)
+MinibatchSourceConfig GetHTKMinibatchSourceConfig(size_t featureDim, size_t numOutputClasses, size_t epochSize, bool randomize = true)
 {
     auto featuresFilePath = L"glob_0000.scp";
     auto labelsFilePath = L"glob_0000.mlf";
@@ -82,12 +82,7 @@ MinibatchSourcePtr CreateHTKMinibatchSource(size_t featureDim, size_t numOutputC
     Deserializer featureDeserializer = HTKFeatureDeserializer({ HTKFeatureConfiguration(L"features", featuresFilePath, featureDim, 0, 0, false) });
     Deserializer labelDeserializer = HTKMLFDeserializer(L"labels", labelMappingFile, numOutputClasses, { labelsFilePath });
 
-    MinibatchSourceConfig config(randomize);
-    
-    config.SetMaxSamples(epochSize).AddDeserializer(featureDeserializer).AddDeserializer(labelDeserializer);
-
-    auto dict = config.AsDictionary();
-    dict.Add(readModeConfig);
-
-    return CreateCompositeMinibatchSource(dict);
+    return MinibatchSourceConfig(randomize)
+        .SetMaxSamples(epochSize)
+        .AddDeserializers({ featureDeserializer, labelDeserializer });
 }

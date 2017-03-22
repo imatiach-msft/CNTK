@@ -99,37 +99,32 @@ def test_sweeps_and_samples_in_minibatch_source_config():
     assert 20 == config.get_max_samples()
     assert 3 == config.get_max_sweeps()
 
-    dictionary = config.as_dictionary()
-
-    assert 3 == len(dictionary.keys())
-    assert 20 == dictionary['maxSamples']
-    assert 3 == dictionary['maxSweeps']
-    assert False == dictionary['randomize']
+    assert 3 == len(config.keys())
+    assert 20 == config['maxSamples']
+    assert 3 == config['maxSweeps']
+    assert False == config['randomize']
     
 def test_randomization_in_minibatch_source_config():
     config = MinibatchSourceConfig(True)
-    dictionary = config.as_dictionary()
 
-    assert 3 == len(dictionary.keys())
-    assert False == dictionary['sampleBasedRandomizationWindow']
-    assert DEFAULT_RANDOMIZATION_WINDOW_IN_CHUNKS == dictionary['randomizationWindow']
-    assert True == dictionary['randomize']
+    assert 3 == len(config.keys())
+    assert False == config['sampleBasedRandomizationWindow']
+    assert DEFAULT_RANDOMIZATION_WINDOW_IN_CHUNKS == config['randomizationWindow']
+    assert True == config['randomize']
 
     config.set_randomization_window_in_samples(12345)
-    dictionary = config.as_dictionary()
 
-    assert 3 == len(dictionary.keys())
-    assert True == dictionary['sampleBasedRandomizationWindow']
-    assert 12345 == dictionary['randomizationWindow']
-    assert True == dictionary['randomize']
+    assert 3 == len(config.keys())
+    assert True == config['sampleBasedRandomizationWindow']
+    assert 12345 == config['randomizationWindow']
+    assert True == config['randomize']
 
     config.set_randomization_window_in_chunks(321)
-    dictionary = config.as_dictionary()
 
-    assert 3 == len(dictionary.keys())
-    assert False == dictionary['sampleBasedRandomizationWindow']
-    assert 321 == dictionary['randomizationWindow']
-    assert True == dictionary['randomize']
+    assert 3 == len(config.keys())
+    assert False == config['sampleBasedRandomizationWindow']
+    assert 321 == config['randomizationWindow']
+    assert True == config['randomize']
 
 def test_all_other_parameters_minibatch_source_config():
     config = MinibatchSourceConfig(False) \
@@ -137,24 +132,21 @@ def test_all_other_parameters_minibatch_source_config():
         .set_frame_mode(True) \
         .set_multithreaded(True)
 
-
-    dictionary = config.as_dictionary()
-
-    assert 4 == len(dictionary.keys())
-    assert 1 == dictionary['traceLevel']
-    assert True == dictionary['frameMode']
-    assert True == dictionary['multiThreadedDeserialization']
+    assert 4 == len(config.keys())
+    assert 1 == config['traceLevel']
+    assert True == config['frameMode']
+    assert True == config['multiThreadedDeserialization']
     
     config.set_frame_mode(False).set_multithreaded(False) \
           .set_trace_level(4) \
           .set_truncation_length(314)
 
-    assert 6 == len(dictionary.keys())
-    assert 4 == dictionary['traceLevel']
-    assert False == dictionary['frameMode']
-    assert False == dictionary['multiThreadedDeserialization']
-    assert True == dictionary['truncated']
-    assert 314 == dictionary['truncationLength']
+    assert 6 == len(config.keys())
+    assert 4 == config['traceLevel']
+    assert False == config['frameMode']
+    assert False == config['multiThreadedDeserialization']
+    assert True == config['truncated']
+    assert 314 == config['truncationLength']
 
 def test_image():
     map_file = "input.txt"
@@ -175,13 +167,12 @@ def test_image():
     image = ImageDeserializer(map_file, StreamDefs(f = StreamDef(field='image', transforms=transforms), l = StreamDef(field='label', shape=num_classes)))
 
     config = MinibatchSourceConfig(randomize=False).set_max_samples(epoch_size).add_deserializer(image)
-    rc = config.as_dictionary()
 
-    assert rc['maxSamples'] == epoch_size
-    assert rc['randomize'] == False
+    assert config['maxSamples'] == epoch_size
+    assert config['randomize'] == False
 
-    assert len(rc['deserializers']) == 1
-    d = rc['deserializers'][0]
+    assert len(config['deserializers']) == 1
+    d = config['deserializers'][0]
     assert d['type'] == 'ImageDeserializer'
     assert d['file'] == map_file
     assert set(d['input'].keys()) == {label_name, feature_name}
@@ -209,14 +200,13 @@ def test_image():
 
     config = MinibatchSourceConfig(randomize=False).set_max_samples(epoch_size).add_deserializer(image) \
                 .set_randomization_window_in_samples(randomization_window)
-    rc = config.as_dictionary()
 
-    assert rc['maxSamples'] == epoch_size
-    assert rc['randomize'] == True
-    assert rc['randomizationWindow'] == randomization_window
-    assert rc['sampleBasedRandomizationWindow'] == True
-    assert len(rc['deserializers']) == 1
-    d = rc['deserializers'][0]
+    assert config['maxSamples'] == epoch_size
+    assert config['randomize'] == True
+    assert config['randomizationWindow'] == randomization_window
+    assert config['sampleBasedRandomizationWindow'] == True
+    assert len(config['deserializers']) == 1
+    d = config['deserializers'][0]
     assert d['type'] == 'ImageDeserializer'
     assert d['file'] == map_file
     assert set(d['input'].keys()) == {label_name, feature_name}
@@ -226,14 +216,13 @@ def test_image():
 
     config = MinibatchSourceConfig().set_max_samples(FULL_DATA_SWEEP).add_deserializer(image) \
                 .set_randomization_window_in_chunks(randomization_window)
-    rc = config.as_dictionary()
 
-    assert rc['maxSamples'] == FULL_DATA_SWEEP
-    assert rc['randomize'] == True
-    assert rc['randomizationWindow'] == randomization_window
-    assert rc['sampleBasedRandomizationWindow'] == False
-    assert len(rc['deserializers']) == 1
-    d = rc['deserializers'][0]
+    assert config['maxSamples'] == FULL_DATA_SWEEP
+    assert config['randomize'] == True
+    assert config['randomizationWindow'] == randomization_window
+    assert config['sampleBasedRandomizationWindow'] == False
+    assert len(config['deserializers']) == 1
+    d = config['deserializers'][0]
     assert d['type'] == 'ImageDeserializer'
     assert d['file'] == map_file
     assert set(d['input'].keys()) == {label_name, feature_name}
@@ -241,9 +230,17 @@ def test_image():
     l = d['input'][label_name]
     assert l['labelDim'] == num_classes
 
+
+    config = MinibatchSourceConfig().add_deserializer(image).add_deserializer(image)
+    assert len(config['deserializers']) == 2
+
+
+    config = MinibatchSourceConfig().add_deserializers([image, image, image])
+    assert len(config['deserializers']) == 3
+
     # TODO depends on ImageReader.dll
     '''
-    mbs = rc.minibatch_source()
+    mbs = config.create_minibatch_source()
     sis = mbs.stream_infos()
     assert set(sis.keys()) == { feature_name, label_name }
     '''
