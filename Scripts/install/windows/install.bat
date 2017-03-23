@@ -1,9 +1,8 @@
-@echo off
 @REM
 @REM Copyright (c) Microsoft. All rights reserved.
 @REM Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 @REM
-
+@echo off
 @echo.
 @echo CNTK Binary Install Script
 
@@ -24,17 +23,9 @@ shift
 
 if not "%~1"=="" goto loop
 
-powershell -NoProfile -NoLogo -Command Get-ChildItem '%installBatchDir%' -Include *.psm1,*.ps1 -recurse -ErrorAction Stop ^| unblock-file -ErrorAction Stop
+powershell -NoProfile -NoLogo -ExecutionPolicy Bypass %psInstall% %allArgs%
 if errorlevel 1 (
-  @echo Error encountered during UNBLOCK-FILE operartion
-  endlocal
-  exit /b 1
-)
-
-powershell -NoProfile -NoLogo -ExecutionPolicy RemoteSigned %psInstall% %allArgs%
-if errorlevel 1 (
-  @echo Error encountered during install operation
-  endlocal
+  @echo Error during install operation
   exit /b 1
 )
 goto :eof
@@ -47,5 +38,3 @@ goto :eof
 @echo An overview of the available command line options can be found at:
 @echo     https://github.com/Microsoft/CNTK/wiki/Setup-Windows-Binary-Script-Options
 @echo.
-
-
