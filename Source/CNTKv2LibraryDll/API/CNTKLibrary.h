@@ -5929,11 +5929,16 @@ namespace CNTK
     ///
     CNTK_API  Deserializer HTKFeatureDeserializer(const std::vector<HTKFeatureConfiguration>& streams);
 
-    ///
+    /// 
     /// Create an HTKMLFDeserializer with the specified options
     ///
     CNTK_API  Deserializer HTKMLFDeserializer(const std::wstring& streamName, const std::wstring& labelMappingFile, size_t dimension, const std::vector<std::wstring>& mlfFiles, bool phoneBoundaries = false);
 
+    /// 
+    /// Create an DataFrameDeserializer with the specified options
+    /// 
+    CNTK_API  Deserializer DataFrameDeserializer(const std::wstring& path);
+    
     ///
     /// Create a LatticeDeserializer with the specified options
     ///

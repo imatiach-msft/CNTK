@@ -1,0 +1,24 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+
+// Integrated Terminal
+
+    // The path of the shell that the terminal uses on Windows. When using shells shipped with Windows (cmd, PowerShell or Bash on Ubuntu), prefer C:\Windows\sysnative over C:\Windows\System32 to use the 64-bit versions.
+    "terminal.integrated.shell.windows": "C:\\Windows\\sysnative\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "terminal.integrated.shellArgs.windows": [
+        "-NoExit",
+        ".\\init.ps1"
+    ],
+    "files.associations": {
+        "*.cuh": "cpp",
+        "future": "cpp",
+        "system_error": "cpp",
+        "typeindex": "cpp",
+        "xlocale": "cpp",
+        "limits": "cpp",
+        "xmemory0": "cpp",
+        "memory": "cpp",
+        "xlocbuf": "cpp",
+        "random": "cpp"
+    }
+}

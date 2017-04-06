@@ -487,6 +487,15 @@ namespace CNTK
         return result;
     }
 
+    Deserializer DataFrameDeserializer(const std::wstring& path)
+    {
+        Deserializer df;
+        Dictionary input;
+        input[L"path"] = path;
+        df.Add(L"type", L"DataFrameDeserializer", L"input", input);
+        return df;
+    }
+
     Deserializer HTKMLFDeserializer(const std::wstring& streamName, const std::wstring& labelMappingFile, size_t dimension, const std::vector<std::wstring>& mlfFiles, bool phoneBoundaries)
     {
         Deserializer htk;
@@ -589,6 +598,7 @@ namespace CNTK
                     { L"HTKFeatureDeserializer",       L"HTKDeserializers" },
                     { L"HTKMLFDeserializer",           L"HTKDeserializers" },
                     { L"LatticeDeserializer",          L"HTKDeserializers" },
+                    { L"DataFrameDeserializer",        L"DataFrameDeserializer" },
                 };
 
                 auto deserializerTypeName = deserializerConfig[L"type"].Value<std::wstring>();

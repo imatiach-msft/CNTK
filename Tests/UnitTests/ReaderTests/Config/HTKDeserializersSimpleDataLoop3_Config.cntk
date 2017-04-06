@@ -11,14 +11,9 @@ Simple_Test = [
     action = "write"
 
     reader = [
-        readerType = "HTKDeserializers"
-        readMethod = "none"
+        readerType = "DataFrameDeserializer"
         verbosity = 0
 
-        features = [
-            dim = 363
-            type = "real"
-            scpFile = "$DataDir$/glob_0000.scp"
-        ]
+        file = "test.parquet"
     ]
 ]
