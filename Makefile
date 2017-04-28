@@ -102,6 +102,8 @@ LIBS_LIST:=
 LDFLAGS:=
 
 CXXVER_GE480:= $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40800)
+# Use this line instead for Makefile highlighting in VSCode
+# CXXVER_GE480:= 1
 ifeq ($(CXXVER_GE480),1)
 	CXXFLAGS += -Wno-error=literal-suffix
 endif
@@ -205,6 +207,28 @@ ifdef KALDI_PATH
   KALDI_LIBPATH += $(KALDI_PATH)/src/lib
   KALDI_LIBS_LIST := kaldi-util kaldi-matrix kaldi-base kaldi-hmm kaldi-cudamatrix kaldi-nnet kaldi-lat
   KALDI_LIBS := $(addprefix -l,$(KALDI_LIBS_LIST))
+endif
+
+ifdef PARQUET_PATH
+  ARROW_INC = $(PARQUET_PATH)/src/parquet/arrow
+  PARQUET_INC = $(PARQUET_PATH)/src/parquet/api
+
+  PARQUET_LIBPATH = $(PARQUET_PATH)/build/debug
+
+  INCLUDEPATH += $(ARROW_INC) $(PARQUET_INC)
+
+  PARQUET_LIBS_LIST := libparquet.a libparquet_arrow.a
+  PARQUET_LIBS := $(addprefix -l:,$(PARQUET_LIBS_LIST))
+endif
+
+ifdef HDFS_PATH
+  HDFS_INC = $(HDFS_PATH)/include
+  HDFS_LIBPATH = $(HDFS_PATH)/lib
+
+  INCLUDEPATH += $(HDFS_INC)
+
+  HDFS_LIBS_LIST := libhdfs.a
+  HDFS_LIBS := $(addprefix -l:, $(HDFS_LIBS_LIST))
 endif
 
 ifdef SUPPORT_AVX2
@@ -727,6 +751,39 @@ SRC+=$(HTKDESERIALIZERS_SRC)
 $(HTKDESERIALIZERS): $(HTKDESERIALIZERS_OBJ) | $(CNTKMATH_LIB)
 	@echo $(SEPARATOR)
 	$(CXX) $(LDFLAGS) -shared $(patsubst %,-L%, $(LIBDIR) $(LIBPATH)) $(patsubst %,$(RPATH)%, $(ORIGINDIR) $(LIBPATH)) -o $@ $^ -l$(CNTKMATH)
+
+########################################
+# DataFrameDeserializers plugin
+########################################
+
+ifdef PARQUET_PATH
+ifdef HDFS_PATH
+
+DF_BASE_DIR:=$(SOURCEDIR)/Readers/DataFrameDeserializers
+HDFS_BASE_DIR:=$(DF_BASE_DIR)/HDFS
+PQ_BASE_DIR:=$(DF_BASE_DIR)/Parquet
+
+DFDESERIALIZERS_SRC =\
+	$(HDFS_BASE_DIR)/HDFSFileObjects.cpp \
+	$(HDFS_BASE_DIR)/HDFSUtils.cpp \
+	$(PQ_BASE_DIR)/RowGroups.cpp \
+	$(DF_BASE_DIR)/DataFrameConfigHelper.cpp \
+	$(DF_BASE_DIR)/DataFrameDeserializer.cpp \
+	$(DF_BASE_DIR)/Exports.cpp \
+
+DFDESERIALIZERS_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(DFDESERIALIZERS_SRC))
+
+DFDESERIALIZERS:=$(LIBDIR)/Cntk.Deserializers.HDFS-$(CNTK_COMPONENT_VERSION).so
+ALL_LIBS+=$(DFDESERIALIZERS)
+PYTHON_LIBS+=$(DFDESERIALIZERS)
+SRC+=$(DFDESERIALIZERS_SRC)
+
+$(DFDESERIALIZERS): $(DFDESERIALIZERS_OBJ) | $(CNTKMATH_LIB)
+	@echo $(SEPARATOR)
+	$(CXX) $(LDFLAGS) -shared $(patsubst %,-L%, $(LIBDIR) $(HDFS_LIBPATH) $(PARQUET_LIBPATH) $(LIBPATH)) $(patsubst %,$(RPATH)%, $(ORIGINDIR) $(HDFS_LIBPATH) $(PARQUET_LIBPATH) $(LIBPATH)) -o $@ $^ -l$(CNTKMATH) $(HDFS_LIBS) $(PARQUET_LIBS)
+
+endif
+endif
 
 ########################################
 # LMSequenceReader plugin
