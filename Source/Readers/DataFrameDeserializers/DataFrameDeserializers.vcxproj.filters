@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DataFrameConfigHelper.cpp" />
+    <ClCompile Include="DataFrameDeserializer.cpp" />
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="HDFS/HDFSFileObjects.cpp">
+      <Filter>HDFS</Filter>
+    </ClCompile>
+    <ClCompile Include="HDFS/HDFSProvider.cpp">
+      <Filter>HDFS</Filter>
+    </ClCompile>
+    <ClCompile Include="Parquet/RowGroups.cpp">
+      <Filter>Parquet</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DataFrameConfigHelper.h" />
+    <ClInclude Include="DataFrameDeserializer.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="HDFS/HDFSFileObjects.h">
+      <Filter>HDFS</Filter>
+    </ClInclude>
+    <ClInclude Include="HDFS/HDFSProvider.h">
+      <Filter>HDFS</Filter>
+    </ClInclude>
+    <ClInclude Include="Parquet/RowGroups.h">
+      <Filter>Parquet</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="HDFS">
+      <UniqueIdentifier>{e560e0d2-bfac-473b-a4fb-8ac9bdfdc59d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parquet">
+      <UniqueIdentifier>{44e0cc0b-99eb-4f7a-9433-44bdb5d8fdb2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

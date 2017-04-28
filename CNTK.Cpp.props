@@ -19,6 +19,12 @@
 
     <HasOpenCv>false</HasOpenCv>
     <HasOpenCv Condition="Exists('$(OPENCV_PATH)') Or Exists('$(OPENCV_PATH_V31)')">true</HasOpenCv>
+
+    <HasParquet>false</HasParquet>
+    <HasParquet Condition="Exists('$(PARQUET_INCLUDE_PATH)') And Exists('$(PARQUET_LIB_PATH)')">true</HasParquet>
+
+    <HasHDFS>false</HasHDFS>
+    <HasHDFS Condition="Exists('$(HDFS_INCLUDE_PATH)') And Exists('$(HDFS_LIB_PATH)')">true</HasHDFS>
     
     <HasProtobuf>false</HasProtobuf>
     <HasProtobuf Condition="Exists('$(PROTOBUF_PATH)')">true</HasProtobuf>
@@ -114,6 +120,16 @@
     <OpenCvLib>$(OpenCvWorld).lib</OpenCvLib>
     <OpenCvLibPath>$(OpenCvPath)\x64\vc14\lib</OpenCvLibPath>
     <OpenCvBinPath>$(OpenCvPath)\x64\vc14\bin</OpenCvBinPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(HasParquet) AND $(HasHDFS)">
+    <ParquetInclude>$(PARQUET_INCLUDE_PATH);</ParquetInclude>
+    <ParquetLibPath>$(PARQUET_LIB_PATH)</ParquetLibPath>
+    <ParquetLibs>parquet.lib;parquet_arrow.lib;</ParquetLibs>
+
+    <HDFSInclude>$(HDFS_INCLUDE_PATH);</HDFSInclude>
+    <HDFSLibPath>$(HDFS_LIB_PATH)</HDFSLibPath>
+    <HDFSLibs>hdfs.lib;</HDFSLibs>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(HasProtobuf)">
