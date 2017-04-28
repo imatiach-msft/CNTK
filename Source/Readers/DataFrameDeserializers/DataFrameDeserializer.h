@@ -7,20 +7,21 @@
 
 #include "DataDeserializerBase.h"
 #include "Config.h"
-#include "HDFSConfigHelper.h"
+
+#include "DataFrameConfigHelper.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // Class represents an HTK deserializer.
 // Provides a set of chunks/sequences to the upper layers.
-class HDFSDeserializer : public DataDeserializerBase
+class DataFrameDeserializer : public DataDeserializerBase
 {
 public:
     // Expects new configuration.
-    HDFSDataDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& config, bool primary);
+    DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& config, bool primary);
 
     // TODO: Should be removed, when legacy config goes away, expects configuration in a legacy mode.
-    HDFSDataDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& featureConfig, const std::wstring& featureName, bool primary);
+    DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& featureConfig, const std::wstring& featureName, bool primary);
 
     // Get information about chunks.
     virtual ChunkDescriptions GetChunkDescriptions() override;
@@ -35,8 +36,8 @@ public:
     virtual bool GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&) override;
 
 private:
-    class HDFSChunk;
-    DISABLE_COPY_AND_MOVE(HTKDataDeserializer);
+    class TabularChunk;
+    DISABLE_COPY_AND_MOVE(DataFrameDeserializer);
 
     // HDFS Functionalities
     FileFormat fileFormat;
@@ -89,6 +90,6 @@ private:
     bool m_expandToPrimary;
 };
 
-typedef std::shared_ptr<HTKDataDeserializer> HTKDataDeserializerPtr;
+typedef std::shared_ptr<DataFrameDeserializer> DataFrameDeserializerPtr;
 
 }}}
