@@ -101,8 +101,9 @@ LIBPATH:=
 LIBS_LIST:=
 LDFLAGS:=
 
-#CXXVER_GE480:= $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40800)
-CXXVER_GE480:= 1
+CXXVER_GE480:= $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40800)
+# Use this line instead for Makefile highlighting in VSCode
+# CXXVER_GE480:= 1
 ifeq ($(CXXVER_GE480),1)
 	CXXFLAGS += -Wno-error=literal-suffix
 endif
