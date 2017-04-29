@@ -15,36 +15,36 @@
 #include "Constants.h"
 // Add ParquetFileReader
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
 using namespace std;
 
-HDFSDeserializer::HDFSDeserializer(
+DataFrameDeserializer::DataFrameDeserializer(
     FileFormat ff,
     const ConfigParameters& cfg,
     const wstring nameNodeAddr,
     const uint32_t nameNodePort,
     const wstring relFilePath) 
 {
-    // Store the FileFormat
-    if (ff == FileFormat::Unknown) {
-        InvalidArgument("The FileType %s is not currently supported.", ff);
-    }
-    fileFormat = ff;
-    hdfsPtr = HDFSUtils::Connect(nameNodeAddr, nameNodePort);
-    // TODO: decide on rel or absolute filePath
-    hdfsFilePtr = HDFSUtils::OpenFile (hdfsPtr, relFilePath, HDFSFileMode = HDFS_MODE_READ);
-    // TODO: decide on saving everything in the config "cfg" or saving it as a private class variable
+    m_verbosity = cfg(L"verbosity", 0);
 
-    // Set up Sequence paths - not needed at this point
-    // vector<wstring> seqPaths = InitializeSequencePaths(hdfsFilePtr);
+    ConfigParameters input = cfg(L"input");
+    auto inputName = input.GetMemberIds().front();
+    std::wstring precision = cfg(L"precision", L"float");
 
-    // NOTE: For our initial implementation, we are going to store all the column chunks' data
-    // in a row group consecutively in a single sequence.
-    // Our CNTK Chunk will consist of multiple sequences, each of which will represent
-    // all the RowGroup's data.
-    // Set up Chunk descriptions
-    InitializeChunkDescriptions(hdfsFilePtr);
+    ConfigParameters streamConfig = input(inputName);
+
+    DataFrameConfigHelper config(streamConfig);
+    auto context = config.GetContextWindow();
+
+    m_elementType = AreEqualIgnoreCase(precision,  L"float") ? ElementType::tfloat : ElementType::tdouble;
+    m_dimension = config.GetFeatureDimension();
+    m_dimension = m_dimension * (1 + context.first + context.second);
+
+    InitializeChunkDescriptions(config.GetSequencePaths());
+    InitializeStreams(inputName);
+    InitializeFeatureInformation();
+    InitializeAugmentationWindow(config.GetContextWindow());
 }
 
 // TODO: this should be a private helper function
@@ -392,54 +392,6 @@ private:
     msra::dbn::matrixbase& m_matrix;
 };
 
-class DataFrameChunk : public Chunk 
-{
-    virtual void GetSequence(size_t sequenceIndex, std::vector<SequenceDataPtr>& result) override 
-    {
-        
-    } 
-
-    virtual ~Chunk() {};
-}
-
-class DataFrameChunkDescription : 
-
-// Represents a chunk data in memory. Given up to the randomizer.
-// It is up to the randomizer to decide when to release a particular chunk.
-class HDFSDeserializer::HDFSChunk : public Chunk
-{
-public:
-    HDFSChunk(std::shared_ptr<HDFSDeserializer> parent, ChunkIdType chunkId) : m_parent(parent), m_chunkId(chunkId)
-    {
-        auto& chunkDescription = m_parent->m_chunks[chunkId];
-
-        // possibly distributed read
-        // making several attempts
-        msra::util::attempt(5, [&]()
-        {
-            chunkDescription.RequireData(m_parent->m_featureKind, m_parent->m_ioFeatureDimension, m_parent->m_samplePeriod, m_parent->m_verbosity);
-        });
-    }
-
-    // Gets data for the sequence.
-    virtual void GetSequence(size_t sequenceId, vector<SequenceDataPtr>& result) override
-    {
-        m_parent->GetSequenceById(m_chunkId, sequenceId, result);
-    }
-
-    // Unloads the data from memory.
-    ~HTKChunk()
-    {
-        auto& chunkDescription = m_parent->m_chunks[m_chunkId];
-        chunkDescription.ReleaseData(m_parent->m_verbosity);
-    }
-
-private:
-    DISABLE_COPY_AND_MOVE(HDFSChunk);
-    std::shared_ptr<HDFSDeserializer> m_parent;
-    ChunkIdType m_chunkId;
-};
-
 // Gets a data chunk with the specified chunk id.
 ChunkPtr HTKDataDeserializer::GetChunk(ChunkIdType chunkId)
 {
@@ -673,4 +625,4 @@ bool HTKDataDeserializer::GetSequenceDescription(const SequenceDescription& prim
     return true;
 }
 
-}}}
+}}}}
