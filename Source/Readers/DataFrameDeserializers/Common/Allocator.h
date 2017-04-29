@@ -10,10 +10,10 @@
 
 #include "MemoryProvider.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace Microsoft { namespace MSR { namespace CNTK {
 
 template <typename T>
-class DFAlloc
+final class cntk_alloc
 {
     
 public: 
@@ -36,35 +36,32 @@ public:
     template <typename Other>
     struct rebind
 	{
-        typedef DFAlloc<Other> other;
+        typedef cntk_alloc<Other> other;
     };
-    /*
 
-    // Allocates contiguous storage for specified number of elements of provided size.
-    virtual void* Alloc(size_t elementSize, size_t numberOfElements) = 0;
+	explicit cntk_alloc()									: customAllocator(nullptr)	   {}
+    cntk_alloc(std::shared_ptr<MemoryProvider> pAllocator)  : customAllocator(pAllocator)  {}
+    
+	// Rule of 5 - with shared_ptr, mostly useless, but logger?
+    cntk_alloc(const cntk_alloc & other)	: customAllocator(other.customAllocator) {}
+    cntk_alloc(cntk_alloc && other)		: customAllocator(other.customAllocator) {}
+    
+    cntk_alloc& operator=(const cntk_alloc& other) {}
+    cntk_alloc& operator=(cntk_alloc&& other) {}
 
-    // Frees contiguous storage.
-    virtual void Free(void* ptr) = 0;
-    */
-
-	// Rule of 3 (move ctor/assign needed now?)
-	// Explicit constructors - deny compiler implicit conversion
-	explicit DFAlloc()									: customAllocator(nullptr)	   {}
-    DFAlloc(const DFAlloc & other)					    : customAllocator(other.customAllocator) {}
-    DFAlloc(std::shared_ptr<MemoryProvider> pAllocator) : customAllocator(pAllocator)	   {}
 	// Rebinding constructor
     template <typename Other>
-    DFAlloc(const DFAlloc<Other> & other) : customAllocator(other.customAllocator) {}
-	// Put the dtor in there even though it's auto generated. DO NOT free the allocator, it's COM ref counted.
-    ~DFAlloc() {}
+    cntk_alloc(const cntk_alloc<Other> & other) : customAllocator(other.customAllocator) {}
+
+    ~cntk_alloc() {}
 
 	// Required methods to pull pointers from references
     pointer			address(reference		r) { return &r; }
     const_pointer	address(const_reference r) { return &r; }
  
-	// Set/Get the custom allocator
-	void setCustomAllocator(std::shared_ptr<MemoryProvider> pAllocator)	{ customAllocator = pAllocator; };
-	std::shared_ptr<MemoryProvider> getCustomAllocator() const			{ return customAllocator; };
+    // Needed this in SSPA but maybe we can do it cleanly in CNTK
+    // void setCustomAllocator(std::shared_ptr<MemoryProvider> pAllocator)	{ customAllocator = pAllocator; };
+	// std::shared_ptr<MemoryProvider> getCustomAllocator() const			{ return customAllocator; };
 
 	// Actual allocation routines - here's where our wrapper logic comes in
 	// Second, unnamed argument is the hint for location. Let's ignore for now
@@ -76,6 +73,7 @@ public:
         }
 		return reinterpret_cast<pointer>(customAllocator->Alloc(sizeof(T), count));
     }
+
     void deallocate(pointer p, size_type n = 0)
 	{ 
 		if ( customAllocator == nullptr )
@@ -88,12 +86,9 @@ public:
 	// Limit number of allocations available
     size_type max_size() const
 	{
-		// The syntax should be:
 		// std::numeric_limits<size _type>::max() / sizeof(T)
-		// but windows may have #defined max() macro, which will cause
-		// a compiler error in some situations, so as a simple fix I've
-		// explicitly put parentheses around the function name to cut off the
-		// macro expansion
+		// but windows may have #defined max() macro, so
+		// parentheses around the function name to cut off macro expansion
         return (std::numeric_limits<size_type>::max)() / sizeof(T);
 	}
 
@@ -102,8 +97,8 @@ public:
     void destroy	(pointer p)				 { p->~T(); }
 
 	// Allocation object equality - by the rules of the standard for single allocator
-	bool operator==(const DFAlloc & o)	{ return customAllocator == o.customAllocator; }
-    bool operator!=(const DFAlloc & a)	{ return !operator==(a); }
+	bool operator==(const cntk_alloc & o)	{ return customAllocator == o.customAllocator; }
+    bool operator!=(const cntk_alloc & a)	{ return !operator==(a); }
 };
 
 }}}}
