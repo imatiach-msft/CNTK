@@ -12,15 +12,15 @@
 #include "Constants.h"
 #include "HDFSFileObjects.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
-// A helper class for HDFS Deserializer configuration.
+// A helper class for DataFrame Deserializer configuration.
 // Provides typed accessor to config parameters.
-class HDFSConfigHelper
+class DataFrameConfigHelper
 {
 public:
     // TODO: Decide on what the constructor should take
-    HDFSConfigHelper(const ConfigParameters& config) : m_config(config)
+    DataFrameConfigHelper(const ConfigParameters& config) : m_config(config)
     {}
 
     // File location resolution parameters
@@ -50,10 +50,15 @@ public:
     std::wstring GetRandomizer();
 
 private:
-    DISABLE_COPY_AND_MOVE(ConfigHelper);
+    DISABLE_COPY_AND_MOVE(DataFrameConfigHelper);
 
     const ConfigParameters& m_config;
-    FileFormat fileFormat;
+
+    std::shared_ptr<RetryPolicy> m_retryPolicy;
+    std::shared_ptr<Logger> m_logger;
+
+    FileFormat m_format;
+    DataSource m_source;
 };
 
-}}}
+}}}}

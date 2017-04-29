@@ -10,11 +10,11 @@
 
 #include "DataFrameConfigHelper.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
-// Class represents an HTK deserializer.
+// "DataFrame" deserializer, orchestrator to initialize proper components
 // Provides a set of chunks/sequences to the upper layers.
-class DataFrameDeserializer : public DataDeserializerBase
+final class DataFrameDeserializer : public DataDeserializerBase
 {
 public:
     // Expects new configuration.
@@ -36,15 +36,12 @@ public:
     virtual bool GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&) override;
 
 private:
-    class TabularChunk;
     DISABLE_COPY_AND_MOVE(DataFrameDeserializer);
 
-    // HDFS Functionalities
-    FileFormat fileFormat;
-    HDFSFileSystemPtr hdfsPtr;
-    HDFSFilePtr hdfsFilePtr;
-
     // Initialization functions.
+    std::shared_ptr<RandomAccessSource> InitializeSource(DataSource source);
+    std::shared_ptr<FormatReader> InitializeReader(FileFormat format);
+
     void InitializeChunkDescriptions(const vector<wstring>& paths);
     void InitializeStreams(const std::wstring& featureName);
     void InitializeFeatureInformation();
@@ -92,4 +89,4 @@ private:
 
 typedef std::shared_ptr<DataFrameDeserializer> DataFrameDeserializerPtr;
 
-}}}
+}}}}

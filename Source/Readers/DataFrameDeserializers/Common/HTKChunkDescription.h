@@ -12,7 +12,7 @@
 #include "UtteranceDescription.h"
 #include "ssematrix.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
 // Class represents a description of an HTK chunk.
 // It is only used internally by the HTK deserializer.
@@ -196,4 +196,4 @@ public:
         }
 };
 
-}}}
+}}}}

@@ -93,6 +93,7 @@
 
     <ClInclude Include="Parquet/RowGroups.h" />
 
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="DataFrameConfigHelper.h" />
     <ClInclude Include="DataFrameDeserializer.h" />
     
