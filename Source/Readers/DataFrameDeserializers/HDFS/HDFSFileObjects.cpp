@@ -158,8 +158,17 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
         m_File = nullptr;
     }
 
+    void HDFSFile::Close() 
+    {
+        if (m_File)
+        {
+            hdfsCloseFile(*m_FS, m_File);
+        }
+        m_File = nullptr;
+    }
+
     // Functions inherited from Parquet-cpp's RandomAccessSource class
-    int64_t HDFSFile::Size() 
+    int64_t HDFSFile::Size() const
     {
         return m_Size;
     }

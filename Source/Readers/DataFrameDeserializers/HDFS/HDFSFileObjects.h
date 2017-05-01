@@ -72,21 +72,24 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
 
         operator     hdfsFile();
         void         Seek(int64_t offset);
-        int64_t      Tell();
         int64_t      Read(void* buffer, int64_t bufferSize);
         int64_t      Write(const void* buffer, int64_t bufferSize);
         void         Flush();
         HDFSFileMode Mode();
 
+        // Overriden functions from Parquet's FileInterface
+        void         Close() override;
+        int64_t      Tell() override;
+
         // Overriden functions from Parquet's RandomAccessSource
-        int64_t      Size();
+        int64_t      Size() const override;
         // Returns bytes read
-        int64_t      Read(int64_t nbytes, uint8_t* out);
-        std::shared_ptr<Buffer> Read(int64_t nbytes);
+        int64_t      Read(int64_t nbytes, uint8_t* out) override;
+        std::shared_ptr<Buffer> Read(int64_t nbytes) override;
 
         // Returns bytes read
-        int64_t      ReadAt(int64_t position, int64_t nbytes, uint8_t* out);
-        std::shared_ptr<Buffer> ReadAt(int64_t position, int64_t nbytes);
+        int64_t      ReadAt(int64_t position, int64_t nbytes, uint8_t* out) override;
+        std::shared_ptr<Buffer> ReadAt(int64_t position, int64_t nbytes) override;
 
     private:
         HDFSFileSystemPtr     m_FS;
