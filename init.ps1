@@ -14,5 +14,7 @@ $localmnt = Convert-Path .
 $dockermnt = "/home/azureml/cntk"
 $image = "cntkhdfs.azurecr.io/dev/hdfs"
 
+# If mounted volume is blank and you have Win10 + CU, look at the potential fix here:
+# https://github.com/docker/for-win/issues/530#issuecomment-293565549
 Write-Output ("[Executing]: docker run -it --rm -v " + $localmnt + ":" + $dockermnt + " " + $image)
 docker run -it --rm -v ${localmnt}:${dockermnt} $image
