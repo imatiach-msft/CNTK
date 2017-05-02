@@ -218,8 +218,8 @@ ifdef PARQUET_PATH
 
   INCLUDEPATH += $(ARROW_INC) $(PARQUET_INC)
 
-  PARQUET_LIBS_LIST := libparquet.a libparquet_arrow.a
-  PARQUET_LIBS := $(addprefix -l:,$(PARQUET_LIBS_LIST))
+  PARQUET_LIBS_LIST := parquet parquet_arrow
+  PARQUET_LIBS := $(addprefix -l,$(PARQUET_LIBS_LIST))
 endif
 
 ifdef HDFS_PATH
@@ -229,7 +229,7 @@ ifdef HDFS_PATH
   INCLUDEPATH += $(HDFS_INC)
 
   HDFS_LIBS_LIST := libhdfs.a
-  HDFS_LIBS := $(addprefix -l:, $(HDFS_LIBS_LIST))
+  HDFS_LIBS := $(addprefix -l, $(HDFS_LIBS_LIST))
 endif
 
 ifdef SUPPORT_AVX2
