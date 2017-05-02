@@ -211,8 +211,8 @@ ifdef KALDI_PATH
 endif
 
 ifdef PARQUET_PATH
-  ARROW_INC = $(PARQUET_PATH)/src/parquet/arrow
-  PARQUET_INC = $(PARQUET_PATH)/src/parquet/api
+  ARROW_INC = $(PARQUET_PATH)/arrow_ep/src/arrow_ep-install/include
+  PARQUET_INC = $(PARQUET_PATH)/src
 
   PARQUET_LIBPATH = $(PARQUET_PATH)/build/debug
 
