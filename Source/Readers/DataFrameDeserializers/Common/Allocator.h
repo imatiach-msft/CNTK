@@ -101,4 +101,4 @@ public:
     bool operator!=(const cntk_alloc & a)	{ return !operator==(a); }
 };
 
-}}}}
+}}}
