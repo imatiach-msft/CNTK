@@ -12,7 +12,7 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
-// Retry policy helper for idempotent reads, based on
+// Retry policy helper for idempotent reads, based on original util
 class RetryPolicy
 {
     int maxAttempts;
@@ -69,7 +69,8 @@ public:
     {
         auto& chunkDescription = m_parent->m_chunks[chunkId];
         // TODO: Provide knobs for retry policy
-        msra::util::attempt(5, [&]()
+        RetryPolicy policy;
+        policy.attempt([&]()
         {
             chunkDescription.RequireData(m_parent->m_featureKind, m_parent->m_ioFeatureDimension, m_parent->m_samplePeriod, m_parent->m_verbosity);
         });
