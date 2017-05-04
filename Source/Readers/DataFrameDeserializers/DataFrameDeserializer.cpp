@@ -20,17 +20,36 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 using namespace std;
 
 HDFSDeserializer::HDFSDeserializer(
+    FileSystem fs,
     FileFormat ff,
     const ConfigParameters& cfg,
     const wstring nameNodeAddr,
     const uint32_t nameNodePort,
     const wstring relFilePath) 
 {
+    switch (fs) {
+        case FileSystem::HDFS:
+            // Instantiate Parquet Arrow's ReadableFileInterface
+
+            break;
+        // Support for additional FileSystems to be added in the future.
+    }
+        
     // Store the FileFormat
     if (ff == FileFormat::Unknown) {
         InvalidArgument("The FileType %s is not currently supported.", ff);
     }
     fileFormat = ff;
+
+    HDFSFileSystem* fs = new HDFSFileSystem(nameNodeAddr, nameNodePort);
+
+    // TODO: Decide on rel or abs file path and whether we are going to parse the file name.
+    HDFSFile* file = new HDFSFile(fs, fileName, HDFS_MODE_READ); // open a file in read-only mode
+    
+    // Based on the fileFormat, instantiate the correct Reader and read.
+    
+
+
     hdfsPtr = HDFSUtils::Connect(nameNodeAddr, nameNodePort);
     // TODO: decide on rel or absolute filePath
     hdfsFilePtr = HDFSUtils::OpenFile (hdfsPtr, relFilePath, HDFSFileMode = HDFS_MODE_READ);

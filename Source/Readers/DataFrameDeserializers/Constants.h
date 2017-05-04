@@ -20,6 +20,12 @@ enum class FileFormat: uint8_t
     Unknown = (uint8_t)(-1)
 }
 
+enum class FileSystem: uint8_t
+{
+    HDFS = 0,
+    Unknown = (uint8_t)(-1)
+}
+
 const std::wstring CLASS_TYPE_NAME = L"HDFSDeserializer";
 
 const int BATCH_SIZE = 10; // For ColumnReader num rows per read
