@@ -38,7 +38,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
         return m_metadata -> schema();
     }
 
-    std::unique_ptr<RowGroupMetaData> ParquetReader::GetRowGroupMetaData(int rowGroupIndex)
+    std::unique_ptr<parquet::RowGroupMetaData> ParquetReader::GetRowGroupMetaData(int rowGroupIndex)
     {
         return m_metadata -> RowGroup(rowGroupIndex);
     }
@@ -48,14 +48,14 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
         if (schema == nullptr)
         {
             std::cout << "The SchemaDescriptor has not been instantiated." << std::endl;
-            return;
+            return nullptr;
         }
         return schema -> Column(colIndex);
     }
 
     void ParquetReader::ParquetSchemaToArrowSchema(const parquet::SchemaDescriptor* parquetSchema, std::shared_ptr<arrow::Schema>* arrowSchema)
     {
-        Status s = parquet::FromParquetSchema(parquetSchema, arrowSchema);
+        arrow::Status s = parquet::arrow::FromParquetSchema(parquetSchema, arrowSchema);
         if (!s.ok()) 
         {
             std::cout << "Could not convert from Parquet schema to Arrow schema." << std::endl;
@@ -68,21 +68,16 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
     // Reads a batch -> currently, we default to using the number of rows per row group.
     arrow::RecordBatch ParquetReader::ReadBatch(int rowGroupIndex) 
     {
-        int numRowGroups = GetNumRowGroups();
         int numCols = GetNumCols();
         const parquet::SchemaDescriptor* schema = GetSchema();
         std::shared_ptr<arrow::Schema> arrowSchema;
         ParquetSchemaToArrowSchema(schema, &arrowSchema);
-        if (!s.ok())
-        {
-            std::cout << "Connection to HDFSClient failed." << std::endl;
-            return;
-        }
+
         std::vector<std::shared_ptr<arrow::Array>> columns;
 
-        std::unique_ptr<parquet::RowGroupMetaData> rowGroupMetaData = GetRowGroupMetaData(rg);
+        std::unique_ptr<parquet::RowGroupMetaData> rowGroupMetaData = GetRowGroupMetaData(rowGroupIndex);
         // TODO: Error checking - check if the ParquetFileReader has been instantiated
-        std::shared_ptr<parquet::RowGroupReader> rgr = m_pfr->RowGroup(rg);
+        std::shared_ptr<parquet::RowGroupReader> rgr = m_pfr->RowGroup(rowGroupIndex);
         int64_t numRowsInRowGroup = rowGroupMetaData->num_rows();
 
         // Loop through the columns in the Row Group
@@ -96,8 +91,8 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
             // read the data into an arrow::Array and push it into the columns vector.
             switch (physType)
             {
-            case parquet::Type::FLOAT:
-
+                case parquet::Type::FLOAT:
+                {
                 parquet::FloatReader* floatReader =
                     static_cast<parquet::FloatReader*>(cr.get());
                 float results[numRowsInRowGroup]; // a buffer to read in the data
@@ -108,11 +103,11 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
 
                 // At this point, the results array is populated with read values.
                 // Now, we pack these values into Arrays and push it into the vector of shared_ptr<arrow::Array>
-                DefaultMemoryPool pool;
-                LoggingMemoryPool lp(&pool);
+                arrow::DefaultMemoryPool pool;
+                arrow::LoggingMemoryPool lp(&pool);
                 // Build the Array
                 std::shared_ptr<arrow::FloatType> type = std::make_shared<arrow::FloatType>();
-                std::shared_ptr<arrow::FloatBuilder> builder = std::make_shared<arrow::FloatBuilder>(lp, type);
+                std::shared_ptr<arrow::FloatBuilder> builder = std::make_shared<arrow::FloatBuilder>(&lp, type);
                 builder -> Reserve(numRowsInRowGroup);
                 // size_t nullCount = 0;
                 for (int i = 0; i < numRowsInRowGroup; i++)
@@ -138,65 +133,71 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
                 arrow::Status s = builder -> Finish(&arrayWithData);
                 columns.push_back(arrayWithData);
                 break;
-
-            case parquet::Type::DOUBLE:
-
-                parquet::DoubleReader* doubleReader =
-                    static_cast<parquet::DoubleReader*>(cr.get());
-                double results[numRowsInRowGroup];
-                int64_t valuesRead;
-                int rowsRead = doubleReader -> ReadBatch(numRowsInRowGroup, nullptr, nullptr, results, &valuesRead);
-                assert(rowsRead == numRowsInRowGroup);   // the number of rows read must match the number of rows in row group
-                assert(valuesRead == numRowsInRowGroup);
-
-                DefaultMemoryPool pool;
-                LoggingMemoryPool lp(&pool);
-                // Build the Array
-                std::shared_ptr<arrow::DoubleType> type = std::make_shared<arrow::DoubleType>();
-                std::shared_ptr<arrow::DoubleBuilder> builder = std::make_shared<arrow::DoubleBuilder>(lp, type);
-                builder -> Reserve(numRowsInRowGroup);
-
-                for (int i = 0; i < numRowsInRowGroup; i++)
-                {
-                    builder -> Append(results[i]);
                 }
-
-                std::shared_ptr<arrow::Array> arrayWithData;
-                arrow::Status s = builder -> Finish(&arrayWithData);
-                columns.push_back(arrayWithData);
-                break;
-            case parquet::Type::BYTE_ARRAY:
-
-                parquet::FixedLenByteArrayReader* fByteReader =
-                    static_cast<parquet::FixedLenByteArrayReader*>(cr. get());
-                unsigned char results[numRowsInRowGroup];
-                int64_t valuesRead;
-                int rowsRead = byteReader -> ReadBatch(numRowsInRowGroup, nullptr, nullptr, results, &valuesRead);
-                assert(rowsRead == numRowsInRowGroup);   // the number of rows read must match the number of rows in row group
-                assert(valuesRead == numRowsInRowGroup);
-                
-                DefaultMemoryPool pool;
-                LoggingMemoryPool lp(&pool);
-                // Build the Array
-                std::shared_ptr<arrow::Type> type = std::make_shared<arrow::FixedSizeBinaryType>();
-                std::shared_ptr<arrow::FixedSizeBinaryBuilder> builder = std::make_shared<arrow::FixedSizeBinaryBuilder>(lp, type);
-                builder -> Reserve(numRowsInRowGroup);
-
-                for (int i = 0; i < numRowsInRowGroup; i++)
+                case parquet::Type::DOUBLE:
                 {
-                    builder -> Append(results[i]);
-                }
+                    parquet::DoubleReader* doubleReader =
+                        static_cast<parquet::DoubleReader*>(cr.get());
+                    double results[numRowsInRowGroup];
+                    int64_t valuesRead;
+                    int rowsRead = doubleReader->ReadBatch(numRowsInRowGroup, nullptr, nullptr, results, &valuesRead);
+                    assert(rowsRead == numRowsInRowGroup); // the number of rows read must match the number of rows in row group
+                    assert(valuesRead == numRowsInRowGroup);
 
-                std::shared_ptr<arrow::Array> arrayWithData;
-                arrow::Status s = builder -> Finish(&arrayWithData);
-                columns.push_back(arrayWithData);                
-                break;
-            default:
+                    arrow::DefaultMemoryPool pool;
+                    arrow::LoggingMemoryPool lp(&pool);
+                    // Build the Array
+                    std::shared_ptr<arrow::DoubleType> type = std::make_shared<arrow::DoubleType>();
+                    std::shared_ptr<arrow::DoubleBuilder> builder = std::make_shared<arrow::DoubleBuilder>(&lp, type);
+                    builder->Reserve(numRowsInRowGroup);
+
+                    for (int i = 0; i < numRowsInRowGroup; i++)
+                    {
+                        builder->Append(results[i]);
+                    }
+
+                    std::shared_ptr<arrow::Array> arrayWithData;
+                    arrow::Status s = builder->Finish(&arrayWithData);
+                    columns.push_back(arrayWithData);
+                    break;
+                }
+                case parquet::Type::FIXED_LEN_BYTE_ARRAY:
+                {
+                    parquet::FixedLenByteArrayReader* fByteReader =
+                        static_cast<parquet::FixedLenByteArrayReader*>(cr.get());
+                    uint8_t results[numRowsInRowGroup];
+                    parquet::FixedLenByteArray flbArray(results);
+                    int64_t valuesRead;
+                    int rowsRead = fByteReader -> ReadBatch(numRowsInRowGroup, nullptr, nullptr, &flbArray, &valuesRead);
+                    assert(rowsRead == numRowsInRowGroup); // the number of rows read must match the number of rows in row group
+                    assert(valuesRead == numRowsInRowGroup);
+
+                    arrow::DefaultMemoryPool pool;
+                    arrow::LoggingMemoryPool lp(&pool);
+                    // Build the Array
+                    std::shared_ptr<arrow::FixedSizeBinaryType> type = std::make_shared<arrow::FixedSizeBinaryType>(numBytesForFixedArray);
+                    std::shared_ptr<arrow::FixedSizeBinaryBuilder> builder = std::make_shared<arrow::FixedSizeBinaryBuilder>(&lp, type);
+                    builder->Reserve(numRowsInRowGroup);
+
+                    for (int i = 0; i < numRowsInRowGroup; i++)
+                    {
+                        builder->Append(&results[i]);
+                    }
+
+                    std::shared_ptr<arrow::Array> arrayWithData;
+                    arrow::Status s = builder->Finish(&arrayWithData);
+                    columns.push_back(arrayWithData);
+                    break;
+                }
+                default:
+                {
+                    std::cout << "Support for other file types will be added in the future." << std::endl;
+                }
                 // Support for other types will be added in the future
             } // switch
         } // column for loop
         // Return a constructed RecordBatch
-        return RecordBatch(arrowSchema, numRowsInRowGroup, &columns);
+        return arrow::RecordBatch(arrowSchema, numRowsInRowGroup, columns);
     }
         // Loop through the columns, check the column type, read all the rows in the column, store it in a buffer, pass it into the Array
         // save the data into a vector of arrow Arrays, then return the Array of columns.
