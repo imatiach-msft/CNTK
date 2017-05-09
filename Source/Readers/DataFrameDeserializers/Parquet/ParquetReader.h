@@ -14,6 +14,7 @@
 #include "arrow/io/interfaces.h"
 #include "parquet/api/reader.h"
 #include "parquet/arrow/schema.h"
+#include "arrow/pretty_print.h"
 #include "HDFSArrowReader.h"
 
 
@@ -33,6 +34,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
         const parquet::ColumnDescriptor* GetColumnDescriptor(const parquet::SchemaDescriptor* schema, int colIndex);
         void ParquetSchemaToArrowSchema(const parquet::SchemaDescriptor* parquetSchema, std::shared_ptr<arrow::Schema>* arrowSchema);
         arrow::RecordBatch ReadBatch(int rowGroupIndex);
+        void PrintRecordBatch(const arrow::RecordBatch& batch, int indent, std::ostream* out);
 
     private:
         std::shared_ptr<arrow::io::RandomAccessFile> m_filePtr;

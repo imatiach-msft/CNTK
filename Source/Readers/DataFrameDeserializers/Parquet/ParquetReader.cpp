@@ -199,6 +199,16 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
         // Return a constructed RecordBatch
         return arrow::RecordBatch(arrowSchema, numRowsInRowGroup, columns);
     }
+
+    void ParquetReader::PrintRecordBatch(const arrow::RecordBatch& batch, int indent, std::ostream* out)
+    {
+        arrow::Status s = arrow::PrettyPrint(batch, indent, out); 
+        if (!s.ok())
+        {
+            std::cout << "Could not print the provided RecordBatch." << std::endl;
+            return;
+        }
+    }
         // Loop through the columns, check the column type, read all the rows in the column, store it in a buffer, pass it into the Array
         // save the data into a vector of arrow Arrays, then return the Array of columns.
         // Need to check the underlying physical datatype to pass into the Array.
