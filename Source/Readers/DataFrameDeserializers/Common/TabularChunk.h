@@ -6,93 +6,88 @@
 #pragma once
 
 #include "DataDeserializerBase.h"
-#include "Config.h"
 
-#include "DataFrameConfigHelper.h"
+#include "Constants.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
-// Retry policy helper for idempotent reads, based on original util
-class RetryPolicy
+
+// Transpose view for a chunk of data in memory. Given up to the randomizer.
+struct TabularData : public DenseSequenceData
 {
-    int maxAttempts;
-    int currentSleep;
-    bool backoff;
+    TabularData(const std::shared_ptr<std::vector<double>>& buff, int row, int ncol) :
+        m_buffer(buff), m_row(row), m_ncol(ncol) {}
 
-public:
-    RetryPolicy(int numAttempts = 5, int initialSleepMillis = 1000, bool exponentialBackoff = false)
+    const void* GetDataBuffer() override
     {
-        maxAttempts = numAttempts;
-        currentSleep = initialSleepMillis;
-        backoff = exponentialBackoff;
+        return m_buffer->data() + m_row * m_ncol;
     }
 
-    template <typename F>
-    void attempt(const F& body)
-    {
-        for (int attempt = 1;; ++attempt)
-        {
-            try
-            {
-                body();
-                if (attempt > 1)
-                    fprintf(stderr, "attempt: success after %d retries\n", attempt);
-                break;
-            }
-            catch (const std::exception &e)
-            {
-                if (attempt >= maxAttempts)
-                {
-                    fprintf(stderr, "attempt: %s, giving up, attempt %d > %d...\n", e.what(), attempt, maxAttempts);
-                    throw; // failed N times --give up and rethrow the error
-                }
-                fprintf(stderr, "attempt: %s, retrying %d-th time out of %d...\n", e.what(), attempt + 1, maxAttempts);
-                ::Sleep(currentSleep); // wait a little, then try again
-                if (backoff)
-                {
-                    currentSleep *= 2;
-                }
-            }
-        }
-    }
+private:
+    std::shared_ptr<std::vector<double>> m_buffer;
+    int m_row;
+    int m_ncol;
 }
 
-// Wrapper view for a chunk of data in memory. Given up to the randomizer.
-// It is up to the randomizer to decide when to release a particular chunk, so this
-// view is similar to a shared_ptr::deleter with an extra method to query for sequences
-// inside the chunk.
 class TabularChunk : public Chunk
 {
 public:
-    TabularChunk(std::shared_ptr<DataFrameDeserializer> parent, ChunkIdType chunkId) :
-        m_parent(parent), m_chunkId(chunkId)
+    TabularChunk(const std::shared_ptr<TableChunk>& chunk, TensorShapePtr& layout)
     {
-        auto& chunkDescription = m_parent->m_chunks[chunkId];
-        // TODO: Provide knobs for retry policy
-        RetryPolicy policy;
-        policy.attempt([&]()
+        // Convert to vector<SequenceDataPtr>
+        auto nrow = chunk->num_rows();
+        auto ncol = chunk->num_columns();
+        m_dataptrs.reserve(nrow);
+        m_data->reserve(nrow * ncol);
+        // BAD LOOP - look into a better mechanism for this
+        // "TransposeAllocator?"
+        // working columnwise for better mem access pattern
+        auto cols = chunk->columns();
+        for (int c = 0; c < ncol; ++c)
         {
-            chunkDescription.RequireData(m_parent->m_featureKind, m_parent->m_ioFeatureDimension, m_parent->m_samplePeriod, m_parent->m_verbosity);
-        });
+            const arrow::Array * arr = cols[c].get();
+            auto type = arr->type_id();
+            if (type = Type::type::DOUBLE)
+            {
+                auto darr = static_cast<const arrow::NumericArray<arrow::DoubleType> *>(arr)->raw_data();
+                for (int r = 0; r < nrow; ++r)
+                {
+                    m_data->operator[](r * ncol + c) = *darr++;
+                }
+            }
+            else
+            {
+                InvalidArgument("Unsupported array type %d", type);
+            }
+        }
+
+        for (int r = 0; r < nrow; ++r)
+        {
+            auto dd = std::make_shared<TabularData>(m_data, r, ncol);
+            dd -> m_numberOfSamples = 1;
+            dd -> m_elementType = ElementType::tdouble;
+            dd -> m_sampleLayout = layout;
+            dd -> m_key = KeyType(r, 0);
+            m_dataptrs.push_back(dd);
+        }
     }
 
     // Gets data for the sequence.
     virtual void GetSequence(SequenceIdType sequenceId, vector<SequenceDataPtr>& result) override
     {
-        m_parent->GetSequenceById(m_chunkId, sequenceId, result);
+        result.push_back(m_dataptrs[sequenceId]);
     }
 
     // Unloads the data from memory.
     ~TabularChunk()
     {
-        auto& chunkDescription = m_parent->m_chunks[m_chunkId];
-        chunkDescription.ReleaseData(m_parent->m_verbosity);
+        m_data->resize(0);
     }
 
 private:
     DISABLE_COPY_AND_MOVE(TabularChunk);
-    std::shared_ptr<DataFrameDeserializer> m_parent;
-    ChunkIdType m_chunkId;
+    std::vector<SequenceDataPtr> m_dataptrs;
+    std::shared_ptr<std::vector<double>> m_data;
 };
 
 }}}}
