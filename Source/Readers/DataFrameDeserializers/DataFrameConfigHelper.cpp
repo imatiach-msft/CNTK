@@ -7,7 +7,7 @@
 #include "DataFrameConfigHelper.h"
 #include "StringUtil.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
 using namespace std;
 
@@ -15,7 +15,6 @@ using namespace std;
 DataFrameConfigHelper::DataFrameConfigHelper(const ConfigParameters& config)
 {
     // fill in members from config
-    std::cout << config << std::endl;
 }
 
-}}}
+}}}}

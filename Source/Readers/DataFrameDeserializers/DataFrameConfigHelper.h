@@ -20,7 +20,7 @@ class DataFrameConfigHelper
 {
 public:
     // TODO: Decide on what the constructor should take
-    DataFrameConfigHelper(const ConfigParameters& config) : m_config(config) {}
+    DataFrameConfigHelper(const ConfigParameters& config);
 
     // Datasource selection
     DataSource GetDataSource() const { return m_source; }

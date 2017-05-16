@@ -6,6 +6,8 @@
 #pragma once
 
 #include <numeric>
+#include <locale>
+#include <string>
 
 #include "Constants.h"
 
@@ -21,8 +23,20 @@ public:
 
     // Only int in arrow
     int NumberOfColumns() const { return m_schema->num_fields(); }
-    std::wstring GetColumnName(int col) const { return std::wstring(m_schema->field(col)->name()); }
-    std::shared_ptr<DataType> GetColumnType(int col) const { return m_schema->field(col)->type(); }
+
+    std::wstring GetColumnName(int col) const
+    {
+        // Hmmm.. assumes string is char bytes column names
+        auto f = m_schema->field(col);
+        auto n = f->name();
+        return std::wstring(n.begin(), n.end());
+    }
+
+    std::shared_ptr<DataType> GetColumnType(int col) const 
+    { 
+        auto f = m_schema->field(col);
+        return f->type(); 
+    }
 
     size_t NumberOfRowsInChunk(int rowgroup) const { return m_rowcounts[rowgroup]; }
     size_t NumberOfRowChunks() const { return m_rowcounts.size(); }
