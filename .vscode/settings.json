@@ -17,6 +17,8 @@
         "xlocale": "cpp",
         "limits": "cpp",
         "xmemory0": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "xlocbuf": "cpp",
+        "random": "cpp"
     }
 }

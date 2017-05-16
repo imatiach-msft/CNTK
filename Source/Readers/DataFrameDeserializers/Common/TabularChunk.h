@@ -27,7 +27,7 @@ private:
     std::shared_ptr<std::vector<double>> m_buffer;
     int m_row;
     int m_ncol;
-}
+};
 
 class TabularChunk : public Chunk
 {
