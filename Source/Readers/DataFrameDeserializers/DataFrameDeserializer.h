@@ -8,20 +8,24 @@
 #include "DataDeserializerBase.h"
 #include "Config.h"
 
-#include "DataFrameConfigHelper.h"
+#include "Common/Constants.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
+class TableMetadata;
+class FileProvider;
+class FileReader;
+
 // "DataFrame" deserializer, orchestrator to initialize proper components
 // Provides a set of chunks/sequences to the upper layers.
-final class DataFrameDeserializer : public DataDeserializerBase
+class DataFrameDeserializer : public DataDeserializerBase
 {
 public:
     // Expects new configuration.
-    DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& config, bool primary);
+    DataFrameDeserializer(const ConfigParameters& config, bool primary);
 
     // TODO: Should be removed, when legacy config goes away, expects configuration in a legacy mode.
-    DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& featureConfig, const std::wstring& featureName, bool primary);
+    //DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& featureConfig, const std::wstring& featureName, bool primary);
 
     // Get information about chunks.
     virtual ChunkDescriptions GetChunkDescriptions() override;
@@ -39,52 +43,27 @@ private:
     DISABLE_COPY_AND_MOVE(DataFrameDeserializer);
 
     // Initialization functions.
-    std::shared_ptr<RandomAccessSource> InitializeSource(DataSource source);
-    std::shared_ptr<FormatReader> InitializeReader(FileFormat format);
+    std::shared_ptr<FileProvider> InitializeProvider(DataSource source, const ConfigParameters& config);
+    std::shared_ptr<FileReader> InitializeReader(FileFormat format, const ConfigParameters& config);
 
-    void InitializeChunkDescriptions(const vector<wstring>& paths);
-    void InitializeStreams(const std::wstring& featureName);
-    void InitializeFeatureInformation();
-    void InitializeAugmentationWindow(const std::pair<size_t, size_t>& augmentationWindow);
+    void InitializeStreams();
 
     // Gets sequence by its chunk id and id inside the chunk.
-    void GetSequenceById(ChunkIdType chunkId, size_t id, std::vector<SequenceDataPtr>&);
+    // TODO have client implement vector + allocator for return bucket
+    void GetSequenceById(ChunkIdType chunkId, size_t id, std::vector<SequenceDataPtr>& returnData);
 
-    // Dimension of features.
-    size_t m_dimension;
 
     // Type of the features.
-    ElementType m_elementType;
+    ElementType m_targetElementType;
 
-    // Chunk descriptions.
-    std::vector<HTKChunkDescription> m_chunks;
+    std::shared_ptr<TableMetadata> m_metadata;
 
-    // Augmentation window.
-    std::pair<size_t, size_t> m_augmentationWindow;
+    std::shared_ptr<FileReader> m_fileReader;
 
-    CorpusDescriptorPtr m_corpus;
+    TensorShapePtr m_layout;
 
     // General configuration
-    int m_verbosity;
-
-    // Total number of frames.
-    size_t m_totalNumberOfFrames = 0;
-
-    // Flag that indicates whether a single speech frames should be exposed as a sequence.
-    bool m_frameMode;
-
-    // Used to correlate a sequence key with the sequence inside the chunk when deserializer is running not in primary mode.
-    // Key -> <chunkid, offset inside chunk>
-    std::map<size_t, std::pair<size_t, size_t>> m_keyToChunkLocation;
-
-    // Auxiliary data for checking against the data in the feature file.
-    unsigned int m_samplePeriod = 0;
-    size_t m_ioFeatureDimension = 0;
-    std::string m_featureKind;
-
-    // A flag that indicates whether the utterance should be extended to match the lenght of the utterance from the primary deserializer.
-    // TODO: This should be moved to the packers when deserializers work in sequence mode only.
-    bool m_expandToPrimary;
+    int m_logVerbosity;
 };
 
 typedef std::shared_ptr<DataFrameDeserializer> DataFrameDeserializerPtr;
