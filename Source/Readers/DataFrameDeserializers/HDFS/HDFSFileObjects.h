@@ -64,7 +64,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
 
     // This class inherits from Apache Parquet-cpp's RandomAccessSource, which is
     // defined in parquet/util/memory.h 
-    class HDFSFile : public parquet::RandomAccessSource
+    class HDFSFile : public parquet::RandomAccessSource, public parquet::FileInterface
     {
     public:
         HDFSFile(HDFSFileSystemPtr fs, const std::string& fileName, HDFSFileMode mode);

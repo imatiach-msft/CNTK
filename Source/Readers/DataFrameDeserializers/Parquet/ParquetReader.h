@@ -15,33 +15,30 @@
 #include "parquet/api/reader.h"
 #include "parquet/arrow/schema.h"
 #include "arrow/pretty_print.h"
-#include "HDFSArrowReader.h"
 
+#include "HDFSArrowReader.h"
+#include "Interfaces.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs
 {
-    class ParquetReader
+    class ParquetReader : FileReader
     {
 
     public:
-        ParquetReader(std::shared_ptr<arrow::io::RandomAccessFile> filePtr);
-        ~ParquetReader();
-        std::shared_ptr<parquet::FileMetaData> GetMetadata();
-        int GetNumRowGroups();
-        int GetNumCols();
-        const parquet::SchemaDescriptor* GetSchema();
-        std::unique_ptr<parquet::RowGroupMetaData> GetRowGroupMetaData(int rowGroupIndex);
+        ParquetReader(const ConfigParameters& config);
+        ~ParquetReader() override;
+        std::shared_ptr<TableMetaData> InitializeSources(const FileList& sources) override;
+        std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) override;
+
         const parquet::ColumnDescriptor* GetColumnDescriptor(const parquet::SchemaDescriptor* schema, int colIndex);
         void ParquetSchemaToArrowSchema(const parquet::SchemaDescriptor* parquetSchema, std::shared_ptr<arrow::Schema>* arrowSchema);
         arrow::RecordBatch ReadBatch(int rowGroupIndex);
         void PrintRecordBatch(const arrow::RecordBatch& batch, int indent, std::ostream* out);
 
     private:
-        std::shared_ptr<arrow::io::RandomAccessFile> m_filePtr;
-        std::unique_ptr<parquet::ParquetFileReader> m_pfr;
-        std::shared_ptr<parquet::FileMetaData> m_metadata;
+        ConfigParameters m_config;
+        std::vector<std::unique_ptr<parquet::ParquetFileReader>> m_fileReaders;
         const int32_t numBytesForFixedArray = 1;
-
     };
 
 } // hdfs
