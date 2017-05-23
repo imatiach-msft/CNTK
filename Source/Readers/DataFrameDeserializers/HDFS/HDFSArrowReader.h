@@ -4,11 +4,9 @@
 //
 
 #pragma once
-#include "arrow/io/interfaces.h"
-#include "arrow/io/hdfs.h"
-#include "arrow/status.h"
 
-#include "Interfaces.h"
+#include "../Common/Constants.h"
+#include "../Common/Interfaces.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
@@ -17,7 +15,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 
     public:
         HDFSArrowReader(
-            const ConfigParameters& config // TODO: maybe use the config to store these variables?
+            const ConfigParameters& config, // TODO: maybe use the config to store these variables?
             const std::string host,
             const std::string path,
             const int port,
@@ -45,13 +43,13 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         // and read the data using the corresponding readers.
         
         // This function loops through the directory and adds the file names to the provided vector.
-        void GetFilesInDirectory(std::vector<arrow::io::HdfsPathInfo>* list, std::vector<std::string>* filePaths);
-        void ListDirectory(const std::string path, std::vector<arrow::io::HdfsPathInfo>* list);
+        void GetFilesInDirectory(std::vector<arrow::io::HdfsPathInfo>& list, std::vector<std::string>& filePaths);
+        void ListDirectory(const std::string path, std::vector<arrow::io::HdfsPathInfo>& list);
         bool IsDirectory(arrow::io::HdfsPathInfo* info);
         void GetPathInfo(const std::string path, arrow::io::HdfsPathInfo* info);
         void Connect(); 
-        void OpenReadable(std::shared_ptr<arrow::io::HdfsReadableFile>* filePtr);
-        void OpenReadableParquetFiles(const std::vector<std::string>& listOfFiles, std::vector<std::shared_ptr<arrow::io::HdfsReadableFile>>& openedFiles)
+        void OpenReadable(const std::string filePath, std::shared_ptr<arrow::io::HdfsReadableFile>* filePtr);
+        void OpenReadableParquetFiles(const std::vector<std::string>& listOfFiles, std::vector<std::shared_ptr<arrow::io::ReadableFileInterface>>& openedFiles);
 
     private:
         ConfigParameters m_config;

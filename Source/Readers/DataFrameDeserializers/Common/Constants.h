@@ -13,6 +13,9 @@
 
 #undef UNUSED
 #include "arrow/io/interfaces.h"
+#include "arrow/io/hdfs.h"
+#include "parquet/api/reader.h"
+#include "parquet/arrow/schema.h"
 #include "arrow/api.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
@@ -41,7 +44,7 @@ typedef arrow::Schema Schema;
 typedef arrow::DataType DataType;
 typedef arrow::Type Type;
 
-typedef std::vector<File> FileList;
+typedef std::vector<std::shared_ptr<File>> FileList;
 
 // Chunk is uint32_t - any reason?
 // Default HDFS partition size -> 64TB?

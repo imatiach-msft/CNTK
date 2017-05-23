@@ -4,20 +4,18 @@
 //
 
 #pragma once
-
-#include <cassert>
-
+/*
 #include "arrow/memory_pool.h"
 #include "arrow/buffer.h"
 #include "arrow/array.h"
 #include "arrow/type.h"
-#include "arrow/io/interfaces.h"
-#include "parquet/api/reader.h"
-#include "parquet/arrow/schema.h"
 #include "arrow/pretty_print.h"
+*/
+//#include "arrow/io/interfaces.h"
 
-#include "HDFSArrowReader.h"
-#include "Interfaces.h"
+#include "../Common/Constants.h"
+#include "../Common/Interfaces.h"
+#include "../HDFS/HDFSArrowReader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
@@ -27,10 +25,10 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     public:
         ParquetReader(const ConfigParameters& config);
         ~ParquetReader() override;
-        std::shared_ptr<TableMetaData> InitializeSources(const FileList& sources) override;
+        std::shared_ptr<TableMetadata> InitializeSources(const FileList& sources) override;
         std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) override;
 
-        void CalculateIndexes(ChunkIdType id int& fileIndex, int& rowGroupIndex);
+        void CalculateIndexes(ChunkIdType id, int& fileIndex, int& rowGroupIndex);
 
         const parquet::ColumnDescriptor* GetColumnDescriptor(const parquet::SchemaDescriptor* schema, int colIndex);
         void ParquetSchemaToArrowSchema(const parquet::SchemaDescriptor* parquetSchema, std::shared_ptr<arrow::Schema>* arrowSchema);
