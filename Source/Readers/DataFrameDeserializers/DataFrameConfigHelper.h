@@ -22,6 +22,11 @@ public:
     // TODO: Decide on what the constructor should take
     DataFrameConfigHelper(const ConfigParameters& config);
 
+    // Credentials for HDFS connections
+    // const std::string host,std::string path, int port,
+
+    void GetHDFSConfig(std::string& host, std::string& filePath, int& port);
+
     // Datasource selection
     DataSource GetDataSource() const { return m_source; }
     FileFormat GetFormat() const { return m_format; }
@@ -33,14 +38,17 @@ public:
 private:
     DISABLE_COPY_AND_MOVE(DataFrameConfigHelper);
 
-    ConfigParameters m_config;
+    const ConfigParameters& m_config;
 
     // std::shared_ptr<RetryPolicy> m_retryPolicy;
     // std::shared_ptr<Logger> m_logger;
 
-    FileFormat m_format;
-    DataSource m_source;
-    ElementType m_elementType;
+    FileFormat     m_format;
+    DataSource     m_source;
+    ElementType    m_elementType;
+    std::string    m_host;
+    std::string    m_filePath;
+    int            m_port;
 };
 
 }}}}

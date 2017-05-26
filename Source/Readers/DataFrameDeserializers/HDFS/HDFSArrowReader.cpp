@@ -12,21 +12,17 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
-    HDFSArrowReader::HDFSArrowReader(
-        const ConfigParameters& config,
-        const std::string host, 
-        const std::string path, // Relative path to the file within HDFS
-        const int port, 
-        const std::string user,
-        const std::string kerbTicket,
-        arrow::io::HdfsDriver driver) : m_filePath(path), m_config(config)
+    HDFSArrowReader::HDFSArrowReader(const ConfigParameters& config) : m_config(config)
     {
+        DataFrameConfigHelper configHelper(config);
+        configHelper.GetHDFSConfig(m_host, m_filePath, m_port);
+
         m_HDFSconf = new arrow::io::HdfsConnectionConfig();
-        m_HDFSconf -> host = host;
-        m_HDFSconf -> port = port;
-        m_HDFSconf -> user = user;
-        m_HDFSconf -> kerb_ticket = kerbTicket; 
-        m_HDFSconf -> driver = driver;
+        m_HDFSconf -> host = m_host;
+        m_HDFSconf -> port = m_port;
+        m_HDFSconf -> user = m_user;
+        m_HDFSconf -> kerb_ticket = m_kerbTicket; 
+        m_HDFSconf -> driver = m_driver;
         m_HDFSClient = nullptr;
         Connect();
     }

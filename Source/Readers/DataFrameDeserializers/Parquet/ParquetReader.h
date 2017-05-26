@@ -19,7 +19,7 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
-    class ParquetReader: FileReader
+    class ParquetReader: public FileReader
     {
 
     public:

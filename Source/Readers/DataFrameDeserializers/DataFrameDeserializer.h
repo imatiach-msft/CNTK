@@ -9,6 +9,8 @@
 #include "Config.h"
 
 #include "Common/Constants.h"
+#include "HDFS/HDFSArrowReader.h"
+#include "Parquet/ParquetReader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 

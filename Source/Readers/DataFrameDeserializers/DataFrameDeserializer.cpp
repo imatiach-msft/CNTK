@@ -51,9 +51,9 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
     m_fileReader = InitializeReader(config.GetFormat(), streamConfig);
 
     // provider -> List<RandomAccessSource>
-    auto filelist = fileProvider->GetFileList();
+    auto filelist = fileProvider -> GetFileList();
     // reader(List<RAS>) -> Metadata
-    m_metadata = m_fileReader->InitializeSources(filelist);
+    m_metadata = m_fileReader -> InitializeSources(filelist);
 
     InitializeStreams();
 }
@@ -64,14 +64,16 @@ std::shared_ptr<FileProvider> DataFrameDeserializer::InitializeProvider(
 {
     if (source == DataSource::HDFS)
     {
-        ConfigParameters hdfs = dfdParams(L"hdfs");
+        //ConfigParameters hdfs = dfdParams(L"hdfs");
         //Instantiate the right things
-        return nullptr;
+        std::shared_ptr<FileProvider> reader(new HDFSArrowReader(dfdParams));
+        return reader;
     }
     else
     {
         InvalidArgument("Unsupported source %d", source);
     }
+    return nullptr;
 }
 
 std::shared_ptr<FileReader> DataFrameDeserializer::InitializeReader(
@@ -80,14 +82,14 @@ std::shared_ptr<FileReader> DataFrameDeserializer::InitializeReader(
 {
     if (format == FileFormat::Parquet)
     {
-        ConfigParameters pq = dfdParams(L"parquet");
-        //Instantiate the right things
-        return nullptr;
+        std::shared_ptr<FileReader> pqReader(new ParquetReader(dfdParams));
+        return pqReader;
     }
     else
     {
         InvalidArgument("Unsupported format %d", format);
     }
+    return nullptr;
 }
 
 

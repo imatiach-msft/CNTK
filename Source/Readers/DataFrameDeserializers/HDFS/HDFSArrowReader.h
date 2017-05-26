@@ -10,18 +10,11 @@
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
-    class HDFSArrowReader : FileProvider
+    class HDFSArrowReader : public FileProvider
     {
 
     public:
-        HDFSArrowReader(
-            const ConfigParameters& config, // TODO: maybe use the config to store these variables?
-            const std::string host,
-            const std::string path,
-            const int port,
-            const std::string user = "",
-            const std::string kerbTicket = "",
-            arrow::io::HdfsDriver driver = arrow::io::HdfsDriver::LIBHDFS);
+        HDFSArrowReader(const ConfigParameters& config);
         ~HDFSArrowReader();
 
         FileList GetFileList() override;
@@ -55,8 +48,14 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         ConfigParameters m_config;
         arrow::io::HdfsConnectionConfig* m_HDFSconf;
         std::shared_ptr<arrow::io::HdfsClient> m_HDFSClient;
-        const std::string m_filePath;
         arrow::Status m_status;
+
+        std::string m_host;
+        std::string m_filePath;
+        int m_port;
+        std::string m_user = "";
+        std::string m_kerbTicket = "";
+        arrow::io::HdfsDriver m_driver = arrow::io::HdfsDriver::LIBHDFS;
     };
 
 } // hdfs
