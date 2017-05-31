@@ -1,0 +1,24 @@
+command = TrainNetwork
+precision = "float";
+traceLevel = 1;
+deviceId = "auto";
+rootDir = "../../..";
+outputDir = "/home/azureml/testResults";
+modelPath = "/home/azureml/testResults/modelOutput";
+dataDir = "/home/azureml/cntk/datasets/part-00000-bc855195-7384-44cb-92e8-7a4301904db8.txt";
+TrainNetwork = [ 
+                reader = [
+                    readerType = DataFrameDeserializer ;
+                    file = "/home/azureml/cntk/datasets/part-00000-bc855195-7384-44cb-92e8-7a4301904db8.txt" ;
+                    input = [
+                        features = [
+                            dim = 3072 ;
+                            format = "dense"
+                        ];
+                        labels = [
+                            dim = 6 ;
+                            format = "sparse"
+                        ]
+                    ]
+                ]
+               ]
