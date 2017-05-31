@@ -24,6 +24,12 @@ DataFrameConfigHelper::DataFrameConfigHelper(const ConfigParameters& config) : m
     // Then, this would require a change in the constructor for the HDFSReader
     // to check for datasources. 
     // How would we check for the parameter names?
+    m_source = DataSource::HDFS;
+    if (m_config.Exists(L"host")) m_host = m_config(L"host");
+    if (m_config.Exists(L"filePath")) m_filePath = m_config(L"filePath");
+    if (m_config.Exists(L"port")) m_port = std::stoi(m_config(L"port"));
+    if (m_config.Exists(L"format")) m_format = FileFormat::Parquet;
+    /*
     std::vector<std::string> hdfsConfigNames = GetSectionsWithParameter("DataFrameDeserializer", config, "hdfs");
     if (hdfsConfigNames.size() == 1)
     {
@@ -38,6 +44,7 @@ DataFrameConfigHelper::DataFrameConfigHelper(const ConfigParameters& config) : m
         else RuntimeError("We currently only support Parquet Formats");
     }
     else RuntimeError("DataFrameDeserializers currently only support HDFS.");
+    */
 }
 
 void DataFrameConfigHelper::GetHDFSConfig(std::string& host, std::string& path, int& port)

@@ -44,7 +44,7 @@ namespace Microsoft { namespace MSR { namespace CNTK {
         { L"CNTKTextFormatReader",  L"Cntk.Deserializers.TextFormat" },
         { L"CNTKBinaryReader",      L"Cntk.Deserializers.Binary" },
         { L"ImageReader",           L"Cntk.Deserializers.Image" },
-        { L"DataFrameDeserializers",L"Cntk.Deserializers.DF"},
+        { L"DataFrameDeserializer", L"Cntk.Deserializers.DF" },
     };
 
 }}}

@@ -7,6 +7,7 @@
 
 #include "../Common/Constants.h"
 #include "../Common/Interfaces.h"
+#include "../DataFrameConfigHelper.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
@@ -15,7 +16,6 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 
     public:
         HDFSArrowReader(const ConfigParameters& config);
-        ~HDFSArrowReader();
 
         FileList GetFileList() override;
 

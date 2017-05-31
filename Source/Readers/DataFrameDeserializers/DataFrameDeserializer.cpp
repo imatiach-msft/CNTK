@@ -34,6 +34,29 @@ static ElementType ResolveTargetType(std::wstring& confval)
     }
 }
 
+bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&)
+{
+    NOT_IMPLEMENTED;
+}
+
+
+void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vector<SequenceDescription>& result)
+{
+    // nested forloop
+    size_t numRowsBeforeChunk = 0;
+    size_t numChunks = m_metadata -> NumberOfRowChunks();
+    for (unsigned int rg = 0; rg < numChunks; ++rg)
+    {
+        size_t numRows = m_metadata -> NumberOfRowsInChunk(rg);
+        for (size_t row = 0; row < numRows; ++row)
+        {
+            size_t key = row + numRowsBeforeChunk;
+            result.push_back(SequenceDescription {row, 1, rg, KeyType(key, key)});
+        }
+        numRowsBeforeChunk += numRows;
+    }
+}
+
 DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool primary) : DataDeserializerBase(primary)
 {
     m_logVerbosity = cfg(L"verbosity", 2);

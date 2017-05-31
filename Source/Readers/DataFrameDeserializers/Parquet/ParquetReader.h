@@ -24,7 +24,6 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 
     public:
         ParquetReader(const ConfigParameters& config);
-        ~ParquetReader() override;
         std::shared_ptr<TableMetadata> InitializeSources(const FileList& sources) override;
         std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) override;
 
