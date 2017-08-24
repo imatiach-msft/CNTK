@@ -6,6 +6,8 @@
 #include "stdafx.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <iostream>
+
 #include "Basics.h"
 #include "StringUtil.h"
 
@@ -34,6 +36,32 @@ static ElementType ResolveTargetType(std::wstring& confval)
     }
 }
 
+bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&)
+{
+    NOT_IMPLEMENTED;
+}
+
+
+void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vector<SequenceDescription>& result)
+{
+    // nested forloop
+    size_t numRowsBeforeChunk = 0;
+    size_t numChunks = m_metadata -> NumberOfRowChunks();
+
+    std::cout << "IN GETSEQUENCESFORCHUNK numChunks: " << numChunks << std::endl; 
+
+    for (unsigned int rg = 0; rg < numChunks; ++rg)
+    {
+        size_t numRows = m_metadata -> NumberOfRowsInChunk(rg);
+        for (size_t row = 0; row < numRows; ++row)
+        {
+            size_t key = row + numRowsBeforeChunk;
+            result.push_back(SequenceDescription {row, 1, rg, KeyType(key, key)});
+        }
+        numRowsBeforeChunk += numRows;
+    }
+}
+
 DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool primary) : DataDeserializerBase(primary)
 {
     m_logVerbosity = cfg(L"verbosity", 2);
@@ -45,17 +73,28 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
 
     DataFrameConfigHelper config(streamConfig);
 
-    m_targetElementType = ResolveTargetType(precision);
+    m_featureDim = config.GetInputDimension(InputType::Features);
+    m_labelDim = config.GetInputDimension(InputType::Labels);
+
+    m_precision = ResolveTargetType(precision);
 
     auto fileProvider = InitializeProvider(config.GetDataSource(), streamConfig);
+    printf("Finished initializing HDFSArrrowReader, now initializing ParquetReader\n");
     m_fileReader = InitializeReader(config.GetFormat(), streamConfig);
+    printf("Initialized ParquetReader!\n");
 
     // provider -> List<RandomAccessSource>
-    auto filelist = fileProvider->GetFileList();
+    auto filelist = fileProvider -> GetFileList();
     // reader(List<RAS>) -> Metadata
-    m_metadata = m_fileReader->InitializeSources(filelist);
+    printf("RETRIEVED the file lists!\n");
+    m_metadata = m_fileReader -> InitializeSources(filelist);
+    std::cout << "NumRowChunks: " << m_metadata -> NumberOfRowChunks() << std::endl;
+    for (int j = 0; j < m_metadata -> NumberOfRowChunks(); j++) 
+        std::cout << "NumRowsInChunk: " << m_metadata ->NumberOfRowsInChunk(j) << "  " << j << std::endl;
 
+    printf("INITIALIZING STREAMS!\n");
     InitializeStreams();
+    printf("INITIALIZED STREAMS!!!!!!\n");
 }
 
 std::shared_ptr<FileProvider> DataFrameDeserializer::InitializeProvider(
@@ -64,14 +103,21 @@ std::shared_ptr<FileProvider> DataFrameDeserializer::InitializeProvider(
 {
     if (source == DataSource::HDFS)
     {
+        printf("printing dfdparams\n");
+        dfdParams.dump();
         ConfigParameters hdfs = dfdParams(L"hdfs");
-        //Instantiate the right things
-        return nullptr;
+        printf("printing hdfsparams\n");
+        hdfs.dump();
+        printf("end printing initialize\n");
+        // TODO: In the future, we should support other FileProviders
+        std::shared_ptr<FileProvider> reader(new HDFSArrowReader(hdfs));
+        return reader;
     }
     else
     {
-        InvalidArgument("Unsupported source %d", source);
+        InvalidArgument("Unsupported source\n");
     }
+    return nullptr;
 }
 
 std::shared_ptr<FileReader> DataFrameDeserializer::InitializeReader(
@@ -80,14 +126,14 @@ std::shared_ptr<FileReader> DataFrameDeserializer::InitializeReader(
 {
     if (format == FileFormat::Parquet)
     {
-        ConfigParameters pq = dfdParams(L"parquet");
-        //Instantiate the right things
-        return nullptr;
+        std::shared_ptr<FileReader> pqReader(new ParquetReader(dfdParams));
+        return pqReader;
     }
     else
     {
-        InvalidArgument("Unsupported format %d", format);
+        InvalidArgument("Unsupported format\n");
     }
+    return nullptr;
 }
 
 
@@ -102,7 +148,6 @@ static StorageType GetDensity(const std::shared_ptr<DataType>& dt)
     return StorageType::dense;
 }
 
-// Describes exposed stream - a single stream of htk features.
 void DataFrameDeserializer::InitializeStreams()
 {
     /* // Potentially move to stream/col?
@@ -121,43 +166,71 @@ void DataFrameDeserializer::InitializeStreams()
         m_streams.push_back(stream);
     }
     */
-    StreamDescriptionPtr stream = make_shared<StreamDescription>();
-    stream->m_id = 0;
-    stream->m_name = L"DFDStream";
-    stream->m_sampleLayout = make_shared<TensorShape>(1, m_metadata->NumberOfColumns());
-    stream->m_elementType = m_targetElementType;
-    stream->m_storageType = StorageType::dense;
-    
-    m_streams.push_back(stream);
+    size_t featureDim;
+    StreamDescriptionPtr featureStream = make_shared<StreamDescription>();
+    featureStream->m_id = 0;
+    featureStream->m_name = L"features";
+    featureStream->m_sampleLayout = make_shared<TensorShape>(m_featureDim); // This should have the shape matching the dimensions of the features column
+    featureStream->m_elementType = m_precision;
+    featureStream->m_storageType = StorageType::dense;
+    m_streams.push_back(featureStream);
+
+    size_t labelDim;
+    StreamDescriptionPtr labelStream = make_shared<StreamDescription>();
+    labelStream->m_id = 1;
+    labelStream->m_name = L"labels";
+    labelStream->m_sampleLayout = make_shared<TensorShape>(m_labelDim); // This should have the shape matching the dimensions of the labels column
+    labelStream->m_elementType = m_precision;
+    labelStream->m_storageType = StorageType::dense;
+    m_streams.push_back(labelStream);
 }
 
 // Gets information about available chunks.
 ChunkDescriptions DataFrameDeserializer::GetChunkDescriptions()
 {
+    std::cout << "IN DFDS::GETCHUNKDESCRIPTIONS :D" << std::endl;
+
     ChunkDescriptions chunks;
-    auto nchunks = m_metadata -> NumberOfRowChunks();
+    auto nchunks = m_metadata -> NumberOfRowChunks(); // nchunks == numberOfRowGroups
+    
+    std::cout << "Reserving nchunks: " << nchunks << std::endl;
     chunks.reserve(nchunks);
 
     for (ChunkIdType i = 0; i < nchunks; ++i)
     {
-        auto nrow = m_metadata -> NumberOfRowsInChunk(i);
-        
-        auto cd = make_shared<ChunkDescription>();
+        auto nrowsInChunk = m_metadata -> NumberOfRowsInChunk(i);
+        std::cout << "nrowsInChunk: " << nrowsInChunk << std::endl;
+        std::shared_ptr<ChunkDescription>cd (new ChunkDescription());
         cd->m_id = i;
-        cd->m_numberOfSamples = nrow;
+        cd->m_numberOfSamples = nrowsInChunk;
         // Figure out rowname for Sequence != Sample
-        cd->m_numberOfSequences = nrow;
+        cd->m_numberOfSequences = nrowsInChunk;
         chunks.push_back(cd);
     }
     return chunks;
 }
 
 
-// Gets a data chunk with the specified chunk id.
+// Gets a data chunk with the specified chunk id. In a Parquet file, this represents the RowGroup number.
 ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
 {
+    // A CNTKChunk maps to a rowGroup, so the shape of the chunk should match the # rows and # cols in each rowGroup
+    std::cout << "IN DFDS::GETCHUNK with chunkID: " << chunkId << std::endl;
     auto c = m_fileReader->GetChunk(chunkId);
-    return make_shared<TabularChunk>(c, m_layout);
+    std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
+//    auto layout = make_shared<TensorShape>(1); // TODO: replace this with actual dimension of the column
+    if (m_precision == ElementType::tfloat)
+    {
+        shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision));
+        return tc;
+    }
+    shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision));
+    return tc;
+/* 
+    shared_ptr<TabularChunk> tc (new TabularChunk(c, m_featureDim, m_labelDim, m_precision));
+    std::cout << "CONSTRUCTED A TC for chunk id: " << chunkId << std::endl;
+    return tc;
+*/
 };
 
 }}}}

@@ -7,12 +7,16 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "Config.h"
 #include "Reader.h"
 
 #undef UNUSED
 #include "arrow/io/interfaces.h"
+#include "arrow/io/hdfs.h"
+#include "parquet/api/reader.h"
+#include "parquet/arrow/schema.h"
 #include "arrow/api.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
@@ -33,6 +37,13 @@ enum class DataSource: uint8_t
     Unknown = (uint8_t)(-1)
 };
 
+enum class InputType: uint8_t
+{
+    Features = 0,
+    Labels = 1,
+    Unknown = (uint8_t)(-1)
+};
+
 const std::wstring CLASS_TYPE_NAME = L"DataFrameDeserializer";
 
 typedef arrow::io::ReadableFileInterface File;
@@ -41,7 +52,7 @@ typedef arrow::Schema Schema;
 typedef arrow::DataType DataType;
 typedef arrow::Type Type;
 
-typedef std::vector<File> FileList;
+typedef std::vector<std::shared_ptr<File>> FileList;
 
 // Chunk is uint32_t - any reason?
 // Default HDFS partition size -> 64TB?

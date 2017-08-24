@@ -583,6 +583,7 @@ namespace CNTK
                     { L"Base64ImageDeserializer",      L"ImageReader" },
                     { L"HTKFeatureDeserializer",       L"HTKDeserializers" },
                     { L"HTKMLFDeserializer",           L"HTKDeserializers" },
+                    { L"DataFrameDeserializer",        L"DataFrameDeserializer" },
                 };
 
                 auto deserializerTypeName = deserializerConfig[L"type"].Value<std::wstring>();
