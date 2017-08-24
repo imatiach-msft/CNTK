@@ -8,6 +8,7 @@
 #define __STDC_FORMAT_MACROS
 #include "Constants.h"
 #include "TableMetadata.h"
+#include "../../ReaderLib/DataDeserializer.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 

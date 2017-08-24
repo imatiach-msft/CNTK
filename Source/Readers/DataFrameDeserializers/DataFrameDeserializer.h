@@ -9,6 +9,8 @@
 #include "Config.h"
 
 #include "Common/Constants.h"
+#include "HDFS/HDFSArrowReader.h"
+#include "Parquet/ParquetReader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
@@ -54,13 +56,16 @@ private:
 
 
     // Type of the features.
-    ElementType m_targetElementType;
+    ElementType m_precision;
 
     std::shared_ptr<TableMetadata> m_metadata;
 
     std::shared_ptr<FileReader> m_fileReader;
 
     TensorShapePtr m_layout;
+
+    size_t m_featureDim;
+    size_t m_labelDim;
 
     // General configuration
     int m_logVerbosity;

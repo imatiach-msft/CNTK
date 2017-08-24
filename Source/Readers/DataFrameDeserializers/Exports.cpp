@@ -12,24 +12,22 @@
 #include "DataReader.h"
 #include "Config.h"
 #include "ReaderShim.h"
-#include "HTKMLFReader.h"
 #include "HeapMemoryProvider.h"
-#include "HTKDataDeserializer.h"
-#include "MLFDataDeserializer.h"
 #include "StringUtil.h"
+#include "CorpusDescriptor.h"
 
 // hdfs-specific
 #include "Constants.h"
+#include "DataFrameDeserializer.h"
 
-
-namespace Microsoft { namespace MSR { namespace CNTK { namespace hdfs {
+namespace Microsoft { namespace MSR { namespace CNTK {
 
 // TODO: Not safe from the ABI perspective. Will be uglified to make the interface ABI.
-extern "C" DATAREADER_API bool CreateDeserializer(IDataDeserializer** deserializer, const std::wstring& type, const ConfigParameters& deserializerConfig, CorpusDescriptorPtr corpus,  bool primary)
+extern "C" DATAREADER_API bool CreateDeserializer(IDataDeserializer** deserializer, const std::wstring& type, const ConfigParameters& deserializerConfig, CorpusDescriptorPtr corpus, bool primary)
 {
-    if (type == CLASS_TYPE_NAME)
+    if (type == DF::CLASS_TYPE_NAME)
     {
-        *deserializer = new HDFSDeserializer(corpus, deserializerConfig, primary);
+        *deserializer = new DF::DataFrameDeserializer(deserializerConfig, primary);
     }
     else
     {
@@ -41,4 +39,4 @@ extern "C" DATAREADER_API bool CreateDeserializer(IDataDeserializer** deserializ
     return true;
 }
 
-}}}}
+}}}

@@ -19,28 +19,43 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 class DataFrameConfigHelper
 {
 public:
-    // TODO: Decide on what the constructor should take
     DataFrameConfigHelper(const ConfigParameters& config);
+
+    // Credentials for HDFS connections
+    // const std::string host,std::string path, int port,
+    void GetHDFSConfig(std::string& host, std::string& filePath, int& port);
+    size_t GetInputDimension(InputType type);
+
+    // Stream configurations
+    void GetFeatureConfigs(size_t& featDim, StorageType& elemType);
+    void GetLabelConfigs(size_t& labelDim, StorageType& elemType);
+    void GetHdfsConfigs(std::string& host, std::string& filePath, int& port, FileFormat& fileFormat);
 
     // Datasource selection
     DataSource GetDataSource() const { return m_source; }
     FileFormat GetFormat() const { return m_format; }
-    
-    // Gets element type.
-    // Currently both features and labels should be of the same type.
-    ElementType GetElementType() const { return m_elementType; };
 
 private:
     DISABLE_COPY_AND_MOVE(DataFrameConfigHelper);
 
-    ConfigParameters m_config;
+    const ConfigParameters& m_config;
 
     // std::shared_ptr<RetryPolicy> m_retryPolicy;
     // std::shared_ptr<Logger> m_logger;
 
-    FileFormat m_format;
-    DataSource m_source;
-    ElementType m_elementType;
+    // Connection configurations
+    std::string    m_host;
+    std::string    m_filePath;
+    int            m_port;
+    FileFormat     m_format;
+    DataSource     m_source;
+
+    // Stream configurations
+    StorageType    m_labelElemType;
+    size_t         m_labelDim;
+    StorageType    m_featureElemType;
+    size_t         m_featureDim;
+
 };
 
 }}}}

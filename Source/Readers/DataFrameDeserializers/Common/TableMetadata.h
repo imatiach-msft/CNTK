@@ -39,8 +39,8 @@ public:
     }
 
     size_t NumberOfRowsInChunk(int rowgroup) const { return m_rowcounts[rowgroup]; }
-    size_t NumberOfRowChunks() const { return m_rowcounts.size(); }
-    size_t NumberOfRows() const { return std::accumulate(m_rowcounts.begin(), m_rowcounts.end(), 0); }
+    size_t NumberOfRowChunks() const { return m_rowcounts.size(); } // In PQfiles, it's the number of RowGroups for now
+    size_t NumberOfRows() const { return std::accumulate(m_rowcounts.begin(), m_rowcounts.end(), 0); } // Total number of rows
 
     ~TableMetadata() {}
 
