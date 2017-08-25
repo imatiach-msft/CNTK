@@ -19,8 +19,8 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 template <typename T>
 struct TabularData : public DenseSequenceData
 {
-    TabularData(const std::shared_ptr<std::vector<T>>buff, int row, int col, int ncol, size_t dim) :
-        m_buffer(buff), m_row(row), m_col(col), m_ncol(ncol), m_dim(dim);
+    TabularData(const std::shared_ptr<std::vector<T>>buff, int row, int col, int ncol) :
+        m_buffer(buff), m_row(row), m_col(col), m_ncol(ncol)
         {
             /*
             for (int i = 0; i < m_buffer -> size(); i++)
@@ -40,7 +40,6 @@ private:
     int m_row;
     int m_col;
     int m_ncol;
-    size_t m_dim;
 };
 
 template <class A_type> class TabularChunk : public Chunk

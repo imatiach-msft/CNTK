@@ -41,9 +41,9 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         std::vector<int> m_rowGroupsPerFile; // stores the number of rowgroups per file during initializesources
         arrow::DefaultMemoryPool* m_pool;
         arrow::LoggingMemoryPool* m_loggingPool;
-        std::set<std::string> m_colNamesToRead;
-        std::set<int> m_colIndexesToRead;
-        std::set<int> m_columnMap;
+        // std::set<std::string> m_colNamesToRead;
+	//  std::set<int> m_colIndexesToRead;
+        // std::set<int> m_columnMap;
         const int32_t numBytesForFixedArray = 1;
     };
 
