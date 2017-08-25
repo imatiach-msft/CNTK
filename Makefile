@@ -224,11 +224,11 @@ endif
 
 ifdef HDFS_PATH
   HDFS_INC = $(HDFS_PATH)/include
-  HDFS_LIBPATH = $(HDFS_PATH)/lib
+  HDFS_LIBPATH = $(HDFS_PATH)/lib/native
 
   INCLUDEPATH += $(HDFS_INC)
 
-  HDFS_LIBS_LIST := libhdfs.a
+  HDFS_LIBS_LIST := hdfs
   HDFS_LIBS := $(addprefix -l, $(HDFS_LIBS_LIST))
 endif
 
@@ -818,16 +818,15 @@ HDFS_BASE_DIR:=$(DF_BASE_DIR)/HDFS
 PQ_BASE_DIR:=$(DF_BASE_DIR)/Parquet
 
 DFDESERIALIZERS_SRC =\
-	$(HDFS_BASE_DIR)/HDFSFileObjects.cpp \
-	$(HDFS_BASE_DIR)/HDFSUtils.cpp \
-	$(PQ_BASE_DIR)/RowGroups.cpp \
+	$(HDFS_BASE_DIR)/HDFSArrowReader.cpp \
+	$(PQ_BASE_DIR)/ParquetReader.cpp \
 	$(DF_BASE_DIR)/DataFrameConfigHelper.cpp \
 	$(DF_BASE_DIR)/DataFrameDeserializer.cpp \
 	$(DF_BASE_DIR)/Exports.cpp \
 
 DFDESERIALIZERS_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(DFDESERIALIZERS_SRC))
 
-DFDESERIALIZERS:=$(LIBDIR)/DataFrameDeserializer-$(CNTK_COMPONENT_VERSION).so
+DFDESERIALIZERS:=$(LIBDIR)/Cntk.Deserializers.DF-$(CNTK_COMPONENT_VERSION).so
 ALL_LIBS+=$(DFDESERIALIZERS)
 PYTHON_LIBS+=$(DFDESERIALIZERS)
 SRC+=$(DFDESERIALIZERS_SRC)
