@@ -17,6 +17,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         m_loggingPool = new arrow::LoggingMemoryPool(m_pool);
     }
 
+  /**
     void ParquetReader::CreateColumnMap(const parquet::SchemaDescriptor* pSchema)
     {
         // Loop through the columns and create a map of column names and indexes
@@ -28,6 +29,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
             // If true, store it in the map.
         }
     }
+  **/
 
     std::shared_ptr<TableMetadata> ParquetReader::InitializeSources(const FileList& sources)
     { 
