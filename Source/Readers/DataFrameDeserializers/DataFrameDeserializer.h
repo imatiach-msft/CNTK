@@ -67,6 +67,8 @@ private:
     size_t m_featureDim;
     size_t m_labelDim;
 
+    std::vector<size_t> m_rowStartIdxes;
+
     // General configuration
     int m_logVerbosity;
 };

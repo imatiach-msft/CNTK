@@ -45,11 +45,11 @@ bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& pr
 void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vector<SequenceDescription>& result)
 {
     // nested forloop
-    size_t numRowsBeforeChunk = 0;
+    size_t numRowsBeforeChunk = m_rowStartIdxes[chunkId];
     size_t numChunks = m_metadata -> NumberOfRowChunks();
 
-    std::cout << "IN GETSEQUENCESFORCHUNK numChunks: " << numChunks << std::endl; 
-
+    std::cout << "IN GETSEQUENCESFORCHUNK chunkId: " << chunkId << " starting idx:" << numRowsBeforeChunk << std::endl; 
+    /*
     for (unsigned int rg = 0; rg < numChunks; ++rg)
     {
         size_t numRows = m_metadata -> NumberOfRowsInChunk(rg);
@@ -60,6 +60,13 @@ void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vecto
         }
         numRowsBeforeChunk += numRows;
     }
+    */
+     size_t numRows = m_metadata -> NumberOfRowsInChunk(chunkId);
+     for (size_t row = 0; row < numRows; ++row)
+     {
+        size_t key = row + numRowsBeforeChunk;
+        result.push_back(SequenceDescription {row, 1, chunkId, KeyType(key, key)});
+     }
 }
 
 DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool primary) : DataDeserializerBase(primary)
@@ -69,7 +76,7 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
 
     ConfigParameters input = cfg(L"input");
     auto inputName = input.GetMemberIds().front();
-    ConfigParameters streamConfig = input(inputName);
+    ConfigParameters streamConfig = input(inputName); // TODO: equivalent to cfg(L"input")?
 
     DataFrameConfigHelper config(streamConfig);
 
@@ -89,8 +96,13 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
     printf("RETRIEVED the file lists!\n");
     m_metadata = m_fileReader -> InitializeSources(filelist);
     std::cout << "NumRowChunks: " << m_metadata -> NumberOfRowChunks() << std::endl;
+    size_t rowStartIdx = 0;
     for (int j = 0; j < m_metadata -> NumberOfRowChunks(); j++) 
+    {
         std::cout << "NumRowsInChunk: " << m_metadata ->NumberOfRowsInChunk(j) << "  " << j << std::endl;
+        m_rowStartIdxes.push_back(rowStartIdx);
+        rowStartIdx += m_metadata ->NumberOfRowsInChunk(j);
+    }
 
     printf("INITIALIZING STREAMS!\n");
     InitializeStreams();
@@ -166,7 +178,7 @@ void DataFrameDeserializer::InitializeStreams()
         m_streams.push_back(stream);
     }
     */
-    size_t featureDim;
+    // size_t featureDim;
     StreamDescriptionPtr featureStream = make_shared<StreamDescription>();
     featureStream->m_id = 0;
     featureStream->m_name = L"features";
@@ -175,7 +187,7 @@ void DataFrameDeserializer::InitializeStreams()
     featureStream->m_storageType = StorageType::dense;
     m_streams.push_back(featureStream);
 
-    size_t labelDim;
+    // size_t labelDim;
     StreamDescriptionPtr labelStream = make_shared<StreamDescription>();
     labelStream->m_id = 1;
     labelStream->m_name = L"labels";
@@ -217,14 +229,14 @@ ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
     // A CNTKChunk maps to a rowGroup, so the shape of the chunk should match the # rows and # cols in each rowGroup
     std::cout << "IN DFDS::GETCHUNK with chunkID: " << chunkId << std::endl;
     auto c = m_fileReader->GetChunk(chunkId);
-    std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
-//    auto layout = make_shared<TensorShape>(1); // TODO: replace this with actual dimension of the column
+    // std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
+    // auto layout = make_shared<TensorShape>(1); // TODO: replace this with actual dimension of the column
     if (m_precision == ElementType::tfloat)
     {
-        shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision));
+        shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
         return tc;
     }
-    shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision));
+    shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
     return tc;
 /* 
     shared_ptr<TabularChunk> tc (new TabularChunk(c, m_featureDim, m_labelDim, m_precision));

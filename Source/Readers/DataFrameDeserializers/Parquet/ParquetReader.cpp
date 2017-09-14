@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "ParquetReader.h"
+#include "../DataFrameConfigHelper.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 {
@@ -15,6 +16,13 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     {
         m_pool = new arrow::DefaultMemoryPool();
         m_loggingPool = new arrow::LoggingMemoryPool(m_pool);
+
+        // ConfigParameters input = config(L"input");
+        // auto inputName = input.GetMemberIds().front();
+        // ConfigParameters streamConfig = input(inputName);
+        DataFrameConfigHelper configHelper(config);
+        m_featureDim = configHelper.GetInputDimension(InputType::Features);
+        m_labelDim = configHelper.GetInputDimension(InputType::Labels);
     }
 
   /**
@@ -79,12 +87,18 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         std::cout << "In da calculateindexes" << std::endl;
         for (int i = 0; i < m_rowGroupsPerFile.size(); i++)
         {
-            std::cout << "m_rowGroupsPerFile[" << i << "] = " << m_rowGroupsPerFile[i] << std::endl;
-            std::cout << "chunkidtype id: " << id << std::endl;
-            if (id <= 0) break;
-            id -= m_rowGroupsPerFile[i];
-            fileIndex = i;
-            rowGroupIndex = id;
+	    // std::cout << "m_rowGroupsPerFile[" << i << "] = " << m_rowGroupsPerFile[i] << std::endl;
+	    // std::cout << "chunkidtype id: " << id << std::endl;
+            if (id < m_rowGroupsPerFile[i])
+	    {
+                 fileIndex = i;
+                 rowGroupIndex = id;
+                 break;
+            }
+            else
+	    {
+                 id -= m_rowGroupsPerFile[i];
+            }
         }
     }
 
@@ -104,27 +118,36 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         parquet::ParquetFileReader* pfr = m_fileReaders[fileIndex].get(); // used .get() to not take away ownership of the unique_ptr from the vector
         std::shared_ptr<parquet::FileMetaData> md = pfr -> metadata();
         int numCols = md -> num_columns();
+        std:vector<size_t> rowSizes = {m_featureDim, m_labelDim};
+	std::cout << "In GetChunk: numCols = " << numCols << " with dims = [" << m_featureDim << ", " << m_labelDim << "]"<< std::endl;
 
         const parquet::SchemaDescriptor* schema = md -> schema();
         std::shared_ptr<arrow::Schema> arrowSchema;
         ParquetSchemaToArrowSchema(schema, &arrowSchema);
 
         std::cout << "converted pqs to as " << std::endl;
+        std::cout << "as = " << arrowSchema -> ToString() << std::endl;
+	
+        std::cout << "num of fields " << arrowSchema -> num_fields() << std::endl;
 
         std::vector<std::shared_ptr<arrow::Array>> columns(numCols);
         std::unique_ptr<parquet::RowGroupMetaData> rgMetadata = md -> RowGroup(rowGroupIndex);
         std::shared_ptr<parquet::RowGroupReader> rgr = pfr -> RowGroup(rowGroupIndex);
         int64_t numRowsInRowGroup = rgMetadata -> num_rows();
 
-        std::cout << "Before entering the reading LOOOP" << std::endl;
+        std::cout << "Before entering the reading LOOOP: numRows =" << numRowsInRowGroup << std::endl;
 
         // Loop through the columns in the Row Group
         for (int col = 0; col < numCols; col++)
         {
+	  int rowSize = static_cast<int>(rowSizes[col]);
+            std::cout << "row size = " << rowSize << std::endl;
             std::shared_ptr<parquet::ColumnReader> cr = rgr -> Column(col);
             const parquet::ColumnDescriptor* colDescriptor = GetColumnDescriptor(schema, col);
             // Cast the ColumnReader to the correct column
             parquet::Type::type physType = colDescriptor -> physical_type();
+	    std::cout << "col name = " << colDescriptor -> name() << " type length = " << colDescriptor -> type_length() << std::endl;
+            std::cout << "max_def_level = " << colDescriptor -> max_definition_level() << " max_rep_level = " << colDescriptor ->  max_repetition_level() << std::endl;
             // Depending on the physical type of the column, cast the Column Reader to the correct type,
             // read the data into an arrow::Array and push it into the columns vector.
             switch (physType)
@@ -149,10 +172,14 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
                     builder -> Init(numRowsInRowGroup);
 
                     // size_t nullCount = 0;
+                    int idx = 0;
                     for (int i = 0; i < numRowsInRowGroup; i++)
                     {
-                        printf("Read in value: %f\n", results[i]);
-                        builder -> Append(results[i]);
+		      for (int j = 0; j < rowSize; j++)
+			{
+                          printf("Read in value: %f\n", results[idx++]); // idx -> j
+                          builder -> Append(results[idx]);
+			}
                         /* TODO: Support for null values in datasets.
                                 if (results[i]) builder -> Append(results[i]);
                                 else 
@@ -172,26 +199,47 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
                     printf("Reading Doubles!\n");
                     parquet::DoubleReader* doubleReader =
                         static_cast<parquet::DoubleReader*>(cr.get());
-                    double results[numRowsInRowGroup];
+                    int64_t valuesToRead = numRowsInRowGroup * rowSize;
+                    int64_t valuesAlreadyRead = 0;
+                    std::cout << "raluesToRead =" << valuesToRead <<std::endl;
+                    double* results =  new double[valuesToRead];
+		    // printf("Reading Batch!\n");
                     int64_t valuesRead;
-                    int rowsRead = doubleReader -> ReadBatch(numRowsInRowGroup, nullptr, nullptr, results, &valuesRead);
-                    assert(rowsRead == numRowsInRowGroup); // the number of rows read must match the number of rows in row group
-                    assert(valuesRead == numRowsInRowGroup);
-
+                    // int rowsRead = doubleReader -> ReadBatch(numRowsInRowGroup, nullptr, nullptr, results, &valuesRead);
+                    int totalRead = 1;
+                    while (totalRead > 0)
+		    {
+                        totalRead = doubleReader -> ReadBatch(valuesToRead, nullptr, nullptr, results + valuesAlreadyRead, &valuesRead);
+                        printf("totalRead = %i\n", totalRead);
+                        valuesAlreadyRead += valuesRead;
+                        std::cout << "raluesAlreadyRead =" << valuesAlreadyRead <<std::endl;
+		    }
+                    
+                    // assert(rowsRead == numRowsInRowGroup); // the number of rows read must match the number of rows in row group
+                    // assert(valuesRead == numRowsInRowGroup);
+                    assert(valuesAlreadyRead == valuesToRead);
+                    // uint8_t bufferInt[3] = { 65, 66, 67};
+		    // std::cout << "buffer = " << bufferInt << std::endl;
                     // Build the Array
                     std::shared_ptr<arrow::DoubleType> type = std::make_shared<arrow::DoubleType>();
                     std::shared_ptr<arrow::DoubleBuilder> builder = std::make_shared<arrow::DoubleBuilder>(m_loggingPool, type);
-                    builder -> Init(numRowsInRowGroup);
-
+                    builder -> Init(valuesToRead);
+                    int idx = 0;
                     for (int i = 0; i < numRowsInRowGroup; i++)
                     {
-                        printf("Read in value: %f\n", results[i]);
-                        builder -> Append(results[i]);
+		      for (int j = 0; j < rowSize; j++)
+			{
+                          // printf("Read in value: %f at %i\n", results[idx], idx); // i -> j
+                          builder -> Append(results[idx++]);
+			}
+		      // printf("Read in value: %f\n", results[i]);
+                      // builder -> Append(results[i]);
                     }
 
                     std::shared_ptr<arrow::Array> arrayWithData;
                     arrow::Status s = builder -> Finish(&arrayWithData);
                     columns[col] = arrayWithData;
+                    delete [] results;
                     break;
                 }
                 case parquet::Type::FIXED_LEN_BYTE_ARRAY:
