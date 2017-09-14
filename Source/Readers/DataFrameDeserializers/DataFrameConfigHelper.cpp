@@ -31,7 +31,7 @@ void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageType& elem
     {
         InvalidArgument("Features must specify format: 'format' property is missing.");        
     }
-
+    std::cout << "feature dim = " << featuresInput(L"dim") << std::endl;
     featDim = std::stoi(featuresInput(L"dim"));
     elemType = StorageType::dense; // currently only supports dense inputs
 }
