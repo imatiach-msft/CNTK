@@ -19,7 +19,7 @@
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
 using namespace std;
-
+  /*
 static ElementType ResolveTargetType(std::wstring& confval)
 {
     if (AreEqualIgnoreCase(confval, L"double"))
@@ -35,6 +35,7 @@ static ElementType ResolveTargetType(std::wstring& confval)
         InvalidArgument("DataFrameDeserializer doesn't support target type %ls, please change your configuration.", confval.c_str());
     }
 }
+  **/
 
 bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&)
 {
@@ -71,9 +72,10 @@ void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vecto
 
 DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool primary) : DataDeserializerBase(primary)
 {
+    printf("In DataFrameDeserializer\n");
     m_logVerbosity = cfg(L"verbosity", 2);
     std::wstring precision = cfg(L"precision", L"double");
-
+    // std::wcout << "the cfg precision is " << precision << std::endl;
     ConfigParameters input = cfg(L"input");
     auto inputName = input.GetMemberIds().front();
     ConfigParameters streamConfig = input(inputName); // TODO: equivalent to cfg(L"input")?
@@ -82,11 +84,15 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
 
     m_featureDim = config.GetInputDimension(InputType::Features);
     m_labelDim = config.GetInputDimension(InputType::Labels);
-
-    m_precision = ResolveTargetType(precision);
+    // std::cout << "Is feature sparse? " << config.IsInputSparse(InputType::Features) << std::endl;
+    // std::cout << "Is labels sparse? " << config.IsInputSparse(InputType::Labels) << std::endl;
+    m_featureStorageType =  config.GetInputStorageType(InputType::Features);
+    m_labelStorageType = config.GetInputStorageType(InputType::Labels);
+    m_precision = config.ResolveTargetType(precision);
 
     auto fileProvider = InitializeProvider(config.GetDataSource(), streamConfig);
     printf("Finished initializing HDFSArrrowReader, now initializing ParquetReader\n");
+    streamConfig.Insert("precision", cfg("precision"));
     m_fileReader = InitializeReader(config.GetFormat(), streamConfig);
     printf("Initialized ParquetReader!\n");
 
@@ -95,11 +101,11 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
     // reader(List<RAS>) -> Metadata
     printf("RETRIEVED the file lists!\n");
     m_metadata = m_fileReader -> InitializeSources(filelist);
-    std::cout << "NumRowChunks: " << m_metadata -> NumberOfRowChunks() << std::endl;
+    // std::cout << "NumRowChunks: " << m_metadata -> NumberOfRowChunks() << std::endl;
     size_t rowStartIdx = 0;
     for (int j = 0; j < m_metadata -> NumberOfRowChunks(); j++) 
     {
-        std::cout << "NumRowsInChunk: " << m_metadata ->NumberOfRowsInChunk(j) << "  " << j << std::endl;
+        // std::cout << "NumRowsInChunk: " << m_metadata ->NumberOfRowsInChunk(j) << "  " << j << std::endl;
         m_rowStartIdxes.push_back(rowStartIdx);
         rowStartIdx += m_metadata ->NumberOfRowsInChunk(j);
     }
@@ -184,7 +190,7 @@ void DataFrameDeserializer::InitializeStreams()
     featureStream->m_name = L"features";
     featureStream->m_sampleLayout = make_shared<TensorShape>(m_featureDim); // This should have the shape matching the dimensions of the features column
     featureStream->m_elementType = m_precision;
-    featureStream->m_storageType = StorageType::dense;
+    featureStream->m_storageType = m_featureStorageType;
     m_streams.push_back(featureStream);
 
     // size_t labelDim;
@@ -193,7 +199,7 @@ void DataFrameDeserializer::InitializeStreams()
     labelStream->m_name = L"labels";
     labelStream->m_sampleLayout = make_shared<TensorShape>(m_labelDim); // This should have the shape matching the dimensions of the labels column
     labelStream->m_elementType = m_precision;
-    labelStream->m_storageType = StorageType::dense;
+    labelStream->m_storageType = m_labelStorageType;
     m_streams.push_back(labelStream);
 }
 
@@ -228,15 +234,19 @@ ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
 {
     // A CNTKChunk maps to a rowGroup, so the shape of the chunk should match the # rows and # cols in each rowGroup
     std::cout << "IN DFDS::GETCHUNK with chunkID: " << chunkId << std::endl;
-    auto c = m_fileReader->GetChunk(chunkId);
+    // auto c = m_fileReader->GetChunk(chunkId);
+    auto c = m_fileReader->GetChunkBuffer(chunkId);
     // std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
     // auto layout = make_shared<TensorShape>(1); // TODO: replace this with actual dimension of the column
     if (m_precision == ElementType::tfloat)
     {
-        shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
+      // shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
+      std::cout << "I am a float!!!!" << std::endl;
+      shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_precision, m_rowStartIdxes[chunkId]));
         return tc;
     }
-    shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
+    // shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
+    shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_precision, m_rowStartIdxes[chunkId]));
     return tc;
 /* 
     shared_ptr<TabularChunk> tc (new TabularChunk(c, m_featureDim, m_labelDim, m_precision));

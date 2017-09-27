@@ -69,6 +69,9 @@ private:
 
     std::vector<size_t> m_rowStartIdxes;
 
+    StorageType m_featureStorageType;
+    StorageType m_labelStorageType;
+
     // General configuration
     int m_logVerbosity;
 };

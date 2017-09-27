@@ -15,6 +15,7 @@
 
 #include "../Common/Constants.h"
 #include "../Common/Interfaces.h"
+#include "../Common/TabularChunk.h"
 #include "../HDFS/HDFSArrowReader.h"
 
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
@@ -26,6 +27,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         ParquetReader(const ConfigParameters& config);
         std::shared_ptr<TableMetadata> InitializeSources(const FileList& sources) override;
         std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) override;
+        std::shared_ptr<ChunkBuffer> GetChunkBuffer(ChunkIdType id) override;
 
         void CalculateIndexes(ChunkIdType id, int& fileIndex, int& rowGroupIndex);
 
@@ -42,7 +44,10 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         arrow::DefaultMemoryPool* m_pool;
         arrow::LoggingMemoryPool* m_loggingPool;
         size_t m_featureDim;
-        size_t m_labelDim;;
+        size_t m_labelDim;
+        bool   m_isFeatureSparse;
+        bool   m_isLabelSparse;
+        ElementType m_precision;
         // std::set<std::string> m_colNamesToRead;
 	//  std::set<int> m_colIndexesToRead;
         // std::set<int> m_columnMap;
