@@ -31,9 +31,21 @@ void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageType& elem
     {
         InvalidArgument("Features must specify format: 'format' property is missing.");        
     }
-    std::cout << "feature dim = " << featuresInput(L"dim") << std::endl;
+    
     featDim = std::stoi(featuresInput(L"dim"));
-    elemType = StorageType::dense; // currently only supports dense inputs
+     std::wstring format = featuresInput(L"format");
+    if (AreEqualIgnoreCase(format, L"dense"))
+    {
+         elemType = StorageType::dense;
+    }
+    else if (AreEqualIgnoreCase(format, L"sparse"))
+    {
+         elemType = StorageType::sparse_csc;
+    }
+    else
+    {
+         InvalidArgument("'format' property has invalid values (either 'dense' or 'sparse').");
+    }
 }
 
 void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageType& elemType)
@@ -56,7 +68,19 @@ void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageType& elemT
     }
 
     labelDim = std::stoi(labelsConfig(L"dim"));
-    elemType = StorageType::dense; // currently only supports dense inputs
+    std::wstring format = labelsConfig(L"format");
+    if (AreEqualIgnoreCase(format, L"dense"))
+    {
+         elemType = StorageType::dense;
+    }
+    else if (AreEqualIgnoreCase(format, L"sparse"))
+    {
+         elemType = StorageType::sparse_csc;
+    }
+    else
+    {
+         InvalidArgument("'format' property has invalid values (either 'dense' or 'sparse').");
+    }
 }
 
 void DataFrameConfigHelper::GetHdfsConfigs(std::string& host, std::string& filePath, int& port, FileFormat& fileFormat)
@@ -97,8 +121,8 @@ void DataFrameConfigHelper::GetHdfsConfigs(std::string& host, std::string& fileP
 // Helper class to help parse BrainScript for stream configurations
 DataFrameConfigHelper::DataFrameConfigHelper(const ConfigParameters& config) : m_config(config)
 {
-    cout << "in DFConfig Helper" << endl;
-    m_config.dump();
+    cout << "In DFConfig Helper" << endl;
+    // m_config.dump();
 
     // Parse connection configurations
     m_source = DataSource::HDFS;
@@ -124,6 +148,47 @@ size_t DataFrameConfigHelper::GetInputDimension(InputType type)
     } 
     
     return m_labelDim;
+}
+
+StorageType DataFrameConfigHelper::GetInputStorageType(InputType type)
+{
+    if (type == InputType::Features)
+    {
+        return m_featureElemType;
+    } 
+    
+    return m_labelElemType;
+}
+
+bool DataFrameConfigHelper::IsInputSparse(InputType type)
+{
+    if (type == InputType::Features)
+    {
+        return m_featureElemType == StorageType::sparse_csc;
+    } 
+    
+    if (type == InputType::Labels)
+    {
+        return m_labelElemType == StorageType::sparse_csc;
+    }
+ 
+    return false;
+}
+
+ElementType DataFrameConfigHelper::ResolveTargetType(std::wstring& confval)
+{
+    if (AreEqualIgnoreCase(confval, L"double"))
+    {
+        return ElementType::tdouble;
+    }
+    else if (AreEqualIgnoreCase(confval, L"float"))
+    {
+        return ElementType::tfloat;
+    }
+    else
+    {
+        InvalidArgument("DataFrameDeserializer doesn't support target type %ls, please change your configuration.", confval.c_str());
+    }
 }
 
 }}}}

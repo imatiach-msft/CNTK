@@ -25,6 +25,8 @@ public:
     // const std::string host,std::string path, int port,
     void GetHDFSConfig(std::string& host, std::string& filePath, int& port);
     size_t GetInputDimension(InputType type);
+    StorageType GetInputStorageType(InputType type);
+    bool IsInputSparse(InputType type);
 
     // Stream configurations
     void GetFeatureConfigs(size_t& featDim, StorageType& elemType);
@@ -34,6 +36,9 @@ public:
     // Datasource selection
     DataSource GetDataSource() const { return m_source; }
     FileFormat GetFormat() const { return m_format; }
+
+    // Others
+    ElementType ResolveTargetType(std::wstring& confval);
 
 private:
     DISABLE_COPY_AND_MOVE(DataFrameConfigHelper);

@@ -103,9 +103,9 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
             std::printf("Reading in file %s from index %d\n", listOfFiles[i].c_str(), i);
             std::shared_ptr<arrow::io::HdfsReadableFile> filePtr;
             HDFSArrowReader::OpenReadable(listOfFiles[i], &filePtr);
-            std::cout << "READ IN: " << filePtr << std::endl;
+            // std::cout << "READ IN: " << filePtr << std::endl;
             openedFiles.push_back(std::move(filePtr));
-            std::cout << "The filePtr value is now: " << filePtr << std::endl;
+            // std::cout << "The filePtr value is now: " << filePtr << std::endl;
         }
     }
 
@@ -128,9 +128,9 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
             ListDirectory(m_filePath, directoryList);
             GetFilesInDirectory(directoryList, filePaths);
         }
-        std::printf("Now reading Parquet Files!\n");
+        // std::printf("Now reading Parquet Files!\n");
         OpenReadableParquetFiles(filePaths, fileList);
-        std::printf("Read in Parquet Files :DDDDDD\n");
+        // std::printf("Read in Parquet Files :DDDDDD\n");
         return fileList;
     }
     
