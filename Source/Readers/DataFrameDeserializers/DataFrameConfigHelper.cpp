@@ -121,7 +121,7 @@ void DataFrameConfigHelper::GetHdfsConfigs(std::string& host, std::string& fileP
 // Helper class to help parse BrainScript for stream configurations
 DataFrameConfigHelper::DataFrameConfigHelper(const ConfigParameters& config) : m_config(config)
 {
-    cout << "In DFConfig Helper" << endl;
+    // cout << "In DFConfig Helper" << endl;
     // m_config.dump();
 
     // Parse connection configurations

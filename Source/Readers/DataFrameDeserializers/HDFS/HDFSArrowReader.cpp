@@ -31,16 +31,16 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
 
     void HDFSArrowReader::Connect() 
     {
-        printf("connecting to HDFSArrowReader's HDFSClient \n");
+        //printf("connecting to HDFSArrowReader's HDFSClient \n");
         //m_HDFSClient = std::make_shared<arrow::io::HdfsClient>();
-       // std::shared_ptr<arrow::io::HdfsClient> sp;
+        // std::shared_ptr<arrow::io::HdfsClient> sp;
         m_status = arrow::io::HdfsClient::Connect(m_HDFSconf, &m_HDFSClient);
         if (!m_status.ok()) 
         {
             std::cout << "Connection to HDFSClient failed. " << std::endl << m_status.ToString() << std::endl;
             RuntimeError("%s", m_status.ToString().c_str());        
         }
-       // m_HDFSClient = sp;
+        // m_HDFSClient = sp;
     }
 
     void HDFSArrowReader::GetPathInfo(const std::string path, arrow::io::HdfsPathInfo* info)
@@ -116,12 +116,12 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         // 3. If path IsDirectory, get a sorted list of the files in the directory
         // 4. Loop through and return a vector of opened RFIs.
         // TODO: store the file paths in the config!!
-        std::printf("IN GET FILELIST\n");
+        // std::printf("IN GET FILELIST\n");
         FileList fileList;
         std::vector<std::string> filePaths;
         arrow::io::HdfsPathInfo pathInfo;
         GetPathInfo(m_filePath, &pathInfo);
-        std::printf("Got path info, now reading Parquet Files\n");
+        // std::printf("Got path info, now reading Parquet Files\n");
         if (!IsDirectory(&pathInfo)) filePaths.push_back(m_filePath);
         else {
             std::vector<arrow::io::HdfsPathInfo> directoryList;

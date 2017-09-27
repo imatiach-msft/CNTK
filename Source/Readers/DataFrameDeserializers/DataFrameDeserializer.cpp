@@ -19,23 +19,6 @@
 namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
 
 using namespace std;
-  /*
-static ElementType ResolveTargetType(std::wstring& confval)
-{
-    if (AreEqualIgnoreCase(confval, L"double"))
-    {
-        return ElementType::tdouble;
-    }
-    else if (AreEqualIgnoreCase(confval, L"float"))
-    {
-        return ElementType::tfloat;
-    }
-    else
-    {
-        InvalidArgument("DataFrameDeserializer doesn't support target type %ls, please change your configuration.", confval.c_str());
-    }
-}
-  **/
 
 bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&)
 {
@@ -49,30 +32,18 @@ void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vecto
     size_t numRowsBeforeChunk = m_rowStartIdxes[chunkId];
     size_t numChunks = m_metadata -> NumberOfRowChunks();
 
-    std::cout << "IN GETSEQUENCESFORCHUNK chunkId: " << chunkId << " starting idx:" << numRowsBeforeChunk << std::endl; 
-    /*
-    for (unsigned int rg = 0; rg < numChunks; ++rg)
+    // std::cout << "IN GETSEQUENCESFORCHUNK chunkId: " << chunkId << " starting idx:" << numRowsBeforeChunk << std::endl;    
+    size_t numRows = m_metadata -> NumberOfRowsInChunk(chunkId);
+    for (size_t row = 0; row < numRows; ++row)
     {
-        size_t numRows = m_metadata -> NumberOfRowsInChunk(rg);
-        for (size_t row = 0; row < numRows; ++row)
-        {
-            size_t key = row + numRowsBeforeChunk;
-            result.push_back(SequenceDescription {row, 1, rg, KeyType(key, key)});
-        }
-        numRowsBeforeChunk += numRows;
+         size_t key = row + numRowsBeforeChunk;
+         result.push_back(SequenceDescription {row, 1, chunkId, KeyType(key, key)});
     }
-    */
-     size_t numRows = m_metadata -> NumberOfRowsInChunk(chunkId);
-     for (size_t row = 0; row < numRows; ++row)
-     {
-        size_t key = row + numRowsBeforeChunk;
-        result.push_back(SequenceDescription {row, 1, chunkId, KeyType(key, key)});
-     }
 }
 
 DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool primary) : DataDeserializerBase(primary)
 {
-    printf("In DataFrameDeserializer\n");
+    // printf("In DataFrameDeserializer\n");
     m_logVerbosity = cfg(L"verbosity", 2);
     std::wstring precision = cfg(L"precision", L"double");
     // std::wcout << "the cfg precision is " << precision << std::endl;
@@ -91,15 +62,15 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
     m_precision = config.ResolveTargetType(precision);
 
     auto fileProvider = InitializeProvider(config.GetDataSource(), streamConfig);
-    printf("Finished initializing HDFSArrrowReader, now initializing ParquetReader\n");
+    // printf("Finished initializing HDFSArrrowReader, now initializing ParquetReader\n");
     streamConfig.Insert("precision", cfg("precision"));
     m_fileReader = InitializeReader(config.GetFormat(), streamConfig);
-    printf("Initialized ParquetReader!\n");
+    // printf("Initialized ParquetReader!\n");
 
     // provider -> List<RandomAccessSource>
     auto filelist = fileProvider -> GetFileList();
     // reader(List<RAS>) -> Metadata
-    printf("RETRIEVED the file lists!\n");
+    // printf("RETRIEVED the file lists!\n");
     m_metadata = m_fileReader -> InitializeSources(filelist);
     // std::cout << "NumRowChunks: " << m_metadata -> NumberOfRowChunks() << std::endl;
     size_t rowStartIdx = 0;
@@ -110,9 +81,9 @@ DataFrameDeserializer::DataFrameDeserializer(const ConfigParameters& cfg, bool p
         rowStartIdx += m_metadata ->NumberOfRowsInChunk(j);
     }
 
-    printf("INITIALIZING STREAMS!\n");
+    // printf("INITIALIZING STREAMS!\n");
     InitializeStreams();
-    printf("INITIALIZED STREAMS!!!!!!\n");
+    // printf("INITIALIZED STREAMS!!!!!!\n");
 }
 
 std::shared_ptr<FileProvider> DataFrameDeserializer::InitializeProvider(
@@ -121,12 +92,11 @@ std::shared_ptr<FileProvider> DataFrameDeserializer::InitializeProvider(
 {
     if (source == DataSource::HDFS)
     {
-        printf("printing dfdparams\n");
-        dfdParams.dump();
+        // printf("printing dfdparams\n");
+        // dfdParams.dump();
         ConfigParameters hdfs = dfdParams(L"hdfs");
-        printf("printing hdfsparams\n");
-        hdfs.dump();
-        printf("end printing initialize\n");
+        // printf("printing hdfsparams\n");
+        // hdfs.dump();
         // TODO: In the future, we should support other FileProviders
         std::shared_ptr<FileProvider> reader(new HDFSArrowReader(hdfs));
         return reader;
@@ -206,18 +176,17 @@ void DataFrameDeserializer::InitializeStreams()
 // Gets information about available chunks.
 ChunkDescriptions DataFrameDeserializer::GetChunkDescriptions()
 {
-    std::cout << "IN DFDS::GETCHUNKDESCRIPTIONS :D" << std::endl;
+    // std::cout << "IN DFDS::GETCHUNKDESCRIPTIONS :D" << std::endl;
 
     ChunkDescriptions chunks;
     auto nchunks = m_metadata -> NumberOfRowChunks(); // nchunks == numberOfRowGroups
     
-    std::cout << "Reserving nchunks: " << nchunks << std::endl;
     chunks.reserve(nchunks);
 
     for (ChunkIdType i = 0; i < nchunks; ++i)
     {
         auto nrowsInChunk = m_metadata -> NumberOfRowsInChunk(i);
-        std::cout << "nrowsInChunk: " << nrowsInChunk << std::endl;
+        // std::cout << "nrowsInChunk: " << nrowsInChunk << std::endl;
         std::shared_ptr<ChunkDescription>cd (new ChunkDescription());
         cd->m_id = i;
         cd->m_numberOfSamples = nrowsInChunk;
@@ -233,26 +202,15 @@ ChunkDescriptions DataFrameDeserializer::GetChunkDescriptions()
 ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
 {
     // A CNTKChunk maps to a rowGroup, so the shape of the chunk should match the # rows and # cols in each rowGroup
-    std::cout << "IN DFDS::GETCHUNK with chunkID: " << chunkId << std::endl;
-    // auto c = m_fileReader->GetChunk(chunkId);
     auto c = m_fileReader->GetChunkBuffer(chunkId);
     // std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
-    // auto layout = make_shared<TensorShape>(1); // TODO: replace this with actual dimension of the column
     if (m_precision == ElementType::tfloat)
     {
-      // shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
-      std::cout << "I am a float!!!!" << std::endl;
-      shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_precision, m_rowStartIdxes[chunkId]));
+        shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_precision, m_rowStartIdxes[chunkId]));
         return tc;
     }
-    // shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_featureDim, m_labelDim, m_precision, m_rowStartIdxes[chunkId]));
     shared_ptr<TabularChunk<double>> tc (new TabularChunk<double>(c, m_precision, m_rowStartIdxes[chunkId]));
     return tc;
-/* 
-    shared_ptr<TabularChunk> tc (new TabularChunk(c, m_featureDim, m_labelDim, m_precision));
-    std::cout << "CONSTRUCTED A TC for chunk id: " << chunkId << std::endl;
-    return tc;
-*/
 };
 
 }}}}
