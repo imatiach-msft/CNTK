@@ -26,7 +26,6 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     public:
         ParquetReader(const ConfigParameters& config);
         std::shared_ptr<TableMetadata> InitializeSources(const FileList& sources) override;
-        std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) override;
         std::shared_ptr<ChunkBuffer> GetChunkBuffer(ChunkIdType id) override;
 
         void CalculateIndexes(ChunkIdType id, int& fileIndex, int& rowGroupIndex);

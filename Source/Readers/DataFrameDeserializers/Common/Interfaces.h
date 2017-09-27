@@ -25,7 +25,6 @@ class FileReader
 public:
     virtual ~FileReader() {}
     virtual std::shared_ptr<TableMetadata> InitializeSources(const FileList& sources) = 0;
-    virtual std::shared_ptr<TableChunk> GetChunk(ChunkIdType id) = 0;
     virtual std::shared_ptr<ChunkBuffer> GetChunkBuffer(ChunkIdType id) = 0;
 };
 
