@@ -19,7 +19,7 @@
 #include "parquet/arrow/schema.h"
 #include "arrow/api.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 // make this into a scoped logger
 #define LOG(f, v) do { fprintf(stderr, "[Info]:\t"); fprintf(stderr, (f), (v)); } while(0)
@@ -49,7 +49,7 @@ const std::wstring CLASS_TYPE_NAME = L"DataFrameDeserializer";
 typedef arrow::io::ReadableFileInterface File;
 typedef arrow::RecordBatch TableChunk;
 typedef arrow::Schema Schema;
-typedef arrow::DataType DataType;
+// typedef arrow::DataType DataType;
 typedef arrow::Type Type;
 
 typedef std::vector<std::shared_ptr<File>> FileList;
@@ -58,4 +58,4 @@ typedef std::vector<std::shared_ptr<File>> FileList;
 // Default HDFS partition size -> 64TB?
 typedef size_t SequenceIdType;
 
-}}}}
+}}

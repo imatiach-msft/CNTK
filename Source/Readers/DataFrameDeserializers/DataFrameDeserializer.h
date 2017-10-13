@@ -12,7 +12,7 @@
 #include "HDFS/HDFSArrowReader.h"
 #include "Parquet/ParquetReader.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 class TableMetadata;
 class FileProvider;
@@ -56,7 +56,7 @@ private:
 
 
     // Type of the features.
-    ElementType m_precision;
+    DataType m_precision;
 
     std::shared_ptr<TableMetadata> m_metadata;
 
@@ -69,8 +69,8 @@ private:
 
     std::vector<size_t> m_rowStartIdxes;
 
-    StorageType m_featureStorageType;
-    StorageType m_labelStorageType;
+    StorageFormat m_featureStorageType;
+    StorageFormat m_labelStorageType;
 
     // General configuration
     int m_logVerbosity;
@@ -78,4 +78,4 @@ private:
 
 typedef std::shared_ptr<DataFrameDeserializer> DataFrameDeserializerPtr;
 
-}}}}
+}}

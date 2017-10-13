@@ -9,11 +9,11 @@
 #include "ConfigUtil.h"
 #include <iostream>
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 using namespace std;
 
-void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageType& elemType)
+void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageFormat& elemType)
 {
     if (!m_config.Exists(L"features")) 
     {
@@ -36,11 +36,11 @@ void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageType& elem
      std::wstring format = featuresInput(L"format");
     if (AreEqualIgnoreCase(format, L"dense"))
     {
-         elemType = StorageType::dense;
+         elemType = StorageFomrat::Dense;
     }
     else if (AreEqualIgnoreCase(format, L"sparse"))
     {
-         elemType = StorageType::sparse_csc;
+         elemType = StorageFormat::SparseCSC;
     }
     else
     {
@@ -48,7 +48,7 @@ void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageType& elem
     }
 }
 
-void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageType& elemType)
+void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageFormat& elemType)
 {
     if (!m_config.Exists(L"labels"))
     {
@@ -71,11 +71,11 @@ void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageType& elemT
     std::wstring format = labelsConfig(L"format");
     if (AreEqualIgnoreCase(format, L"dense"))
     {
-         elemType = StorageType::dense;
+         elemType = StorageFormat::Dense;
     }
     else if (AreEqualIgnoreCase(format, L"sparse"))
     {
-         elemType = StorageType::sparse_csc;
+         elemType = StorageFormat::SparseCSC;
     }
     else
     {
@@ -150,7 +150,7 @@ size_t DataFrameConfigHelper::GetInputDimension(InputType type)
     return m_labelDim;
 }
 
-StorageType DataFrameConfigHelper::GetInputStorageType(InputType type)
+StorageFormat DataFrameConfigHelper::GetInputStorageType(InputType type)
 {
     if (type == InputType::Features)
     {
@@ -164,26 +164,26 @@ bool DataFrameConfigHelper::IsInputSparse(InputType type)
 {
     if (type == InputType::Features)
     {
-        return m_featureElemType == StorageType::sparse_csc;
+        return m_featureElemType == StorageFomrat::SparseCSC;
     } 
     
     if (type == InputType::Labels)
     {
-        return m_labelElemType == StorageType::sparse_csc;
+        return m_labelElemType == StorageFormat::SparseCSC;
     }
  
     return false;
 }
 
-ElementType DataFrameConfigHelper::ResolveTargetType(std::wstring& confval)
+DataType DataFrameConfigHelper::ResolveTargetType(std::wstring& confval)
 {
     if (AreEqualIgnoreCase(confval, L"double"))
     {
-        return ElementType::tdouble;
+        return DataType::Double;
     }
     else if (AreEqualIgnoreCase(confval, L"float"))
     {
-        return ElementType::tfloat;
+        return DataType::Float;
     }
     else
     {
@@ -191,4 +191,4 @@ ElementType DataFrameConfigHelper::ResolveTargetType(std::wstring& confval)
     }
 }
 
-}}}}
+}}

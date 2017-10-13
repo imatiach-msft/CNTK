@@ -12,7 +12,7 @@
 
 #include "Common/Constants.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 // A helper class for DataFrame Deserializer configuration.
 // Provides typed accessor to config parameters.
@@ -25,12 +25,12 @@ public:
     // const std::string host,std::string path, int port,
     void GetHDFSConfig(std::string& host, std::string& filePath, int& port);
     size_t GetInputDimension(InputType type);
-    StorageType GetInputStorageType(InputType type);
+    StorageFormat GetInputStorageType(InputType type);
     bool IsInputSparse(InputType type);
 
     // Stream configurations
-    void GetFeatureConfigs(size_t& featDim, StorageType& elemType);
-    void GetLabelConfigs(size_t& labelDim, StorageType& elemType);
+    void GetFeatureConfigs(size_t& featDim, StorageFormat& elemType);
+    void GetLabelConfigs(size_t& labelDim, StorageFormat& elemType);
     void GetHdfsConfigs(std::string& host, std::string& filePath, int& port, FileFormat& fileFormat);
 
     // Datasource selection
@@ -38,7 +38,7 @@ public:
     FileFormat GetFormat() const { return m_format; }
 
     // Others
-    ElementType ResolveTargetType(std::wstring& confval);
+    DataType ResolveTargetType(std::wstring& confval);
 
 private:
     DISABLE_COPY_AND_MOVE(DataFrameConfigHelper);
@@ -56,11 +56,11 @@ private:
     DataSource     m_source;
 
     // Stream configurations
-    StorageType    m_labelElemType;
+    StorageFormat    m_labelElemType;
     size_t         m_labelDim;
-    StorageType    m_featureElemType;
+    StorageFormat    m_featureElemType;
     size_t         m_featureDim;
 
 };
 
-}}}}
+}}

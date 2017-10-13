@@ -9,7 +9,7 @@
 #include "../Common/Interfaces.h"
 #include "../DataFrameConfigHelper.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
+namespace CNTK { namespace DF
 {
     class HDFSArrowReader : public FileProvider
     {
@@ -59,4 +59,4 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     };
 
 } // hdfs
-}}}
+}

@@ -20,7 +20,7 @@
 #include "Constants.h"
 #include "DataFrameDeserializer.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace CNTK {
 
 // TODO: Not safe from the ABI perspective. Will be uglified to make the interface ABI.
 extern "C" DATAREADER_API bool CreateDeserializer(IDataDeserializer** deserializer, const std::wstring& type, const ConfigParameters& deserializerConfig, CorpusDescriptorPtr corpus, bool primary)
@@ -39,4 +39,4 @@ extern "C" DATAREADER_API bool CreateDeserializer(IDataDeserializer** deserializ
     return true;
 }
 
-}}}
+}

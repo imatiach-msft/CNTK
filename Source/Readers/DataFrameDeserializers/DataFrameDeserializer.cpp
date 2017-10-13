@@ -16,7 +16,7 @@
 #include "Common/Interfaces.h"
 #include "Common/TabularChunk.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 using namespace std;
 
@@ -37,7 +37,7 @@ void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vecto
     for (size_t row = 0; row < numRows; ++row)
     {
          size_t key = row + numRowsBeforeChunk;
-         result.push_back(SequenceDescription {row, 1, chunkId, KeyType(key, key)});
+         result.push_back(SequenceDescription {row, 1, chunkId, SequenceType(key, key)});
     }
 }
 
@@ -131,9 +131,9 @@ static SmallVector<size_t> GetDimensionality(const std::shared_ptr<DataType>& dt
     return SmallVector<size_t>(1, 1);
 }
 
-static StorageType GetDensity(const std::shared_ptr<DataType>& dt)
+static StorageFormat GetDensity(const std::shared_ptr<DataType>& dt)
 {
-    return StorageType::dense;
+    return StorageFormat::Dense;
 }
 
 void DataFrameDeserializer::InitializeStreams()
@@ -204,7 +204,7 @@ ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
     // A CNTKChunk maps to a rowGroup, so the shape of the chunk should match the # rows and # cols in each rowGroup
     auto c = m_fileReader->GetChunkBuffer(chunkId);
     // std::cout << "GOT CHUNK, NOW RETURNING A SHARED TABULAR CHUNK" << std::endl;
-    if (m_precision == ElementType::tfloat)
+    if (m_precision == DataType::Float)
     {
         shared_ptr<TabularChunk<float>> tc (new TabularChunk<float>(c, m_precision, m_rowStartIdxes[chunkId]));
         return tc;
@@ -213,4 +213,4 @@ ChunkPtr DataFrameDeserializer::GetChunk(ChunkIdType chunkId)
     return tc;
 };
 
-}}}}
+}}

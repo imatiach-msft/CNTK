@@ -18,7 +18,7 @@
 #include "../Common/TabularChunk.h"
 #include "../HDFS/HDFSArrowReader.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
+namespace CNTK { namespace DF
 {
     class ParquetReader: public FileReader
     {
@@ -46,7 +46,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
         size_t m_labelDim;
         bool   m_isFeatureSparse;
         bool   m_isLabelSparse;
-        ElementType m_precision;
+        DataType m_precision;
         // std::set<std::string> m_colNamesToRead;
 	//  std::set<int> m_colIndexesToRead;
         // std::set<int> m_columnMap;
@@ -54,4 +54,4 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     };
 
 } // DF
-}}}
+}

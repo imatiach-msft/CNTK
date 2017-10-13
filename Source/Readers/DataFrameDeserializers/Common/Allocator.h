@@ -10,7 +10,7 @@
 
 #include "MemoryProvider.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK {
+namespace CNTK {
 
 template <typename T>
 final class cntk_alloc
@@ -101,4 +101,4 @@ public:
     bool operator!=(const cntk_alloc & a)   { return !operator==(a); }
 };
 
-}}}
+}

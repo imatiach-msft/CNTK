@@ -11,7 +11,7 @@
 
 #include "Constants.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 // Wrapper metadata view for this table's schema - used to initialize streams
 // Can also be used to validate all RFIs adhere to same schema and error out if not
@@ -32,7 +32,7 @@ public:
         return std::wstring(n.begin(), n.end());
     }
 
-    std::shared_ptr<DataType> GetColumnType(int col) const 
+    std::shared_ptr<arrow::DataType> GetColumnType(int col) const 
     { 
         auto f = m_schema->field(col);
         return f->type(); 
@@ -50,4 +50,4 @@ private:
     std::vector<size_t> m_rowcounts;
 };
 
-}}}}
+}}

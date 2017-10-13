@@ -10,7 +10,7 @@
 // This class is used by the DataFrameDeserialzers class to read in files
 // using Arrow's HDFS file interfaces 
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
+namespace CNTK { namespace DF
 {
     HDFSArrowReader::HDFSArrowReader(const ConfigParameters& config) : m_config(config)
     {
@@ -135,4 +135,4 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     }
     
 } // hdfs
-}}}
+}

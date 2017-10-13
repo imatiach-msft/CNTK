@@ -12,7 +12,7 @@
 
 #include "Constants.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 struct ArrayWrapperBase
 {
@@ -150,7 +150,7 @@ template <class A_type> class TabularChunk : public Chunk
 {
 public:
 
-  TabularChunk(const std::shared_ptr<ChunkBuffer>& chunk,  ElementType precision, size_t rowStartIdx) 
+  TabularChunk(const std::shared_ptr<ChunkBuffer>& chunk,  DataType precision, size_t rowStartIdx) 
     : m_chunkBuffer(chunk), m_precision(precision), m_rowStartIdx(rowStartIdx)
     {
         // TableChunk == arrow's RecordBatch.
@@ -208,7 +208,7 @@ public:
                 sd->m_elementType = m_precision; // should get from brainscript
                 sd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
                 // std::cout << "TensorShape:" <<  dd->m_sampleLayout->GetNumElements() << std::endl;
-                sd->m_key = KeyType(r + rowStartIdx, c);
+                sd->m_key = SequenceKey(r + rowStartIdx, c);
                 m_dataptrs.push_back(sd);
 	      }
               else
@@ -219,7 +219,7 @@ public:
                 dd->m_elementType = m_precision; // should get from brainscript
                 dd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
                 // std::cout << "TensorShape:" <<  dd->m_sampleLayout->GetNumElements() << std::endl;
-                dd->m_key = KeyType(r + rowStartIdx, c);
+                dd->m_key = SequenceKey(r + rowStartIdx, c);
                 m_dataptrs.push_back(dd);
 	      }
             }
@@ -250,7 +250,7 @@ private:
     DISABLE_COPY_AND_MOVE(TabularChunk);
     std::vector<SequenceDataPtr> m_dataptrs;
     std::shared_ptr<std::vector<A_type>> m_data;
-    ElementType m_precision;
+    DataType m_precision;
     size_t m_featureDim;
     size_t m_labelDim;
     size_t m_rowStartIdx;
@@ -258,4 +258,4 @@ private:
     const std::shared_ptr<ChunkBuffer> m_chunkBuffer;
 };
 
-}}}}
+}}

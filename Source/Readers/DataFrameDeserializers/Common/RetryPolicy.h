@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 // Retry policy helper for idempotent reads, based on original util
 class RetryPolicy
@@ -52,4 +52,4 @@ public:
     }
 };
 
-}}}}
+}}

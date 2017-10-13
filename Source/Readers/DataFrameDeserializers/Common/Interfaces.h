@@ -11,7 +11,7 @@
 #include "TabularChunk.h"
 #include "../../ReaderLib/DataDeserializer.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 class FileProvider
 {
@@ -35,4 +35,4 @@ public:
     virtual std::shared_ptr<TableChunk> Transform(std::shared_ptr<TableChunk> input) = 0;
 };
 
-}}}}
+}}

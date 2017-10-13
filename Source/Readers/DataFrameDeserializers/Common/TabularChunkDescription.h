@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include "DataDeserializer.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF {
+namespace CNTK { namespace DF {
 
 class TabularChunkDescription
 {
@@ -35,5 +35,5 @@ public:
         return m_chunkId;
     }
 };
-}}}}
+}}
 */

@@ -7,7 +7,7 @@
 #include "ParquetReader.h"
 #include "../DataFrameConfigHelper.h"
 
-namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
+namespace CNTK { namespace DF
 {
     static int64_t ReadDoubleColumn(parquet::DoubleReader* reader, int64_t valuesToRead, double* values)
     {
@@ -54,13 +54,13 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
          return valuesAlreadyRead;
     }
 
-    static bool CheckValueColumnType(ElementType expected, parquet::Type::type actual)
+    static bool CheckValueColumnType(DataType expected, parquet::Type::type actual)
     {
-         if (expected == ElementType::tdouble && actual != parquet::Type::DOUBLE)
+         if (expected == DataType::Double && actual != parquet::Type::DOUBLE)
 	 {
 	     return false;
 	 }
-         if (expected == ElementType::tfloat && actual != parquet::Type::FLOAT)
+         if (expected == DataType::Float && actual != parquet::Type::FLOAT)
 	 {
              return false;
 	 }
@@ -108,7 +108,7 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
          return valuesAlreadyRead;
     }
 
-    static int64_t ReadValueColumn(std::shared_ptr<parquet::ColumnReader> reader, ElementType expectedType, parquet::Type::type actualType, int64_t valuesToRead, std::shared_ptr<ChunkBuffer> buffer)
+    static int64_t ReadValueColumn(std::shared_ptr<parquet::ColumnReader> reader, DataType expectedType, parquet::Type::type actualType, int64_t valuesToRead, std::shared_ptr<ChunkBuffer> buffer)
     {
          // printf("Reading values outlined!\n");
          if (!CheckValueColumnType(expectedType, actualType))
@@ -348,4 +348,4 @@ namespace Microsoft { namespace MSR { namespace CNTK { namespace DF
     }
 
 } // hdfs
-}}}
+}
