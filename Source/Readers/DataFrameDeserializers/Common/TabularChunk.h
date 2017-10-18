@@ -76,6 +76,7 @@ struct DenseFieldData : public DenseSequenceData
     DenseFieldData(const T* buffer, int row, int col, size_t rowSize) :
     m_buffer(buffer), m_row(row), m_col(col), m_rowSize(rowSize)
     {
+        m_dim = NDShape(1, rowSize);
     }
 
     const void* GetDataBuffer() override
@@ -93,20 +94,26 @@ struct DenseFieldData : public DenseSequenceData
 	  }
 	  }
         **/
-        return m_buffer + (m_row * m_rowSize);
+       return m_buffer + (m_row * m_rowSize);
     }
+
+    const NDShape& GetSampleShape() override
+    {
+       return m_dim;
+    } 
 
 private:
     const T* m_buffer;
     int m_row;
     int m_col;
     size_t m_rowSize;
+    NDShape m_dim;
 };
 
 template <typename T>
 struct SparseFieldData : public SparseSequenceData
 {
-    SparseFieldData(const T* values, const int* indices, std::vector<int>& nnzCounts, int row, int col) :
+    SparseFieldData(const T* values, const int* indices, std::vector<int>& nnzCounts, int row, int col, size_t rowSize) :
       m_values(values), m_row(row), m_col(col)
     {
          SparseSequenceData::m_indices = const_cast<int*>(indices);
@@ -117,6 +124,7 @@ struct SparseFieldData : public SparseSequenceData
 	     SparseSequenceData::m_totalNnzCount =+ SparseSequenceData::m_nnzCounts[i];
          }
          // std::cout << "total nnz count is " << SparseSequenceData::m_totalNnzCount << std::endl;
+         m_dim = NDShape(1, rowSize);    
     }
 
     const void* GetDataBuffer() override
@@ -140,10 +148,16 @@ struct SparseFieldData : public SparseSequenceData
           return m_values;
     }
 
+    const NDShape& GetSampleShape() override
+    {
+       return m_dim;
+    } 
+
 private:
     const T* m_values;
     int m_row;
     int m_col;
+    NDShape m_dim;
 };
 
 template <class A_type> class TabularChunk : public Chunk
@@ -203,10 +217,10 @@ public:
 		std::vector<int> nnzCounts({nnzCount});
                 auto sd = std::make_shared<SparseFieldData<A_type>>(static_cast<const A_type*>(m_chunkBuffer->m_columnBuffers[bufferColIdx + 2]->GetArray()) + disp, 
 								    static_cast<const int*>(m_chunkBuffer->m_columnBuffers[bufferColIdx + 1]->GetArray()) + disp,
-                                                                    nnzCounts, r, c);
+                                                                    nnzCounts, r, c, m_chunkBuffer->m_columnDims[c]);
                 sd->m_numberOfSamples = 1;
                 sd->m_elementType = m_precision; // should get from brainscript
-                sd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
+                // sd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
                 // std::cout << "TensorShape:" <<  dd->m_sampleLayout->GetNumElements() << std::endl;
                 sd->m_key = SequenceKey(r + rowStartIdx, c);
                 m_dataptrs.push_back(sd);
@@ -217,7 +231,7 @@ public:
                                                                    r, c, m_chunkBuffer->m_columnDims[c]);
                 dd->m_numberOfSamples = 1;
                 dd->m_elementType = m_precision; // should get from brainscript
-                dd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
+                // dd->m_sampleLayout = make_shared<TensorShape>(m_chunkBuffer->m_columnDims[c]);
                 // std::cout << "TensorShape:" <<  dd->m_sampleLayout->GetNumElements() << std::endl;
                 dd->m_key = SequenceKey(r + rowStartIdx, c);
                 m_dataptrs.push_back(dd);

@@ -33,12 +33,12 @@ void DataFrameConfigHelper::GetFeatureConfigs(size_t& featDim, StorageFormat& el
     }
     
     featDim = std::stoi(featuresInput(L"dim"));
-     std::wstring format = featuresInput(L"format");
-    if (AreEqualIgnoreCase(format, L"dense"))
+    std::wstring format = featuresInput(L"format");
+    if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(format, L"dense"))
     {
-         elemType = StorageFomrat::Dense;
+         elemType = StorageFormat::Dense;
     }
-    else if (AreEqualIgnoreCase(format, L"sparse"))
+    else if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(format, L"sparse"))
     {
          elemType = StorageFormat::SparseCSC;
     }
@@ -69,11 +69,11 @@ void DataFrameConfigHelper::GetLabelConfigs(size_t& labelDim, StorageFormat& ele
 
     labelDim = std::stoi(labelsConfig(L"dim"));
     std::wstring format = labelsConfig(L"format");
-    if (AreEqualIgnoreCase(format, L"dense"))
+    if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(format, L"dense"))
     {
          elemType = StorageFormat::Dense;
     }
-    else if (AreEqualIgnoreCase(format, L"sparse"))
+    else if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(format, L"sparse"))
     {
          elemType = StorageFormat::SparseCSC;
     }
@@ -164,7 +164,7 @@ bool DataFrameConfigHelper::IsInputSparse(InputType type)
 {
     if (type == InputType::Features)
     {
-        return m_featureElemType == StorageFomrat::SparseCSC;
+        return m_featureElemType == StorageFormat::SparseCSC;
     } 
     
     if (type == InputType::Labels)
@@ -177,11 +177,11 @@ bool DataFrameConfigHelper::IsInputSparse(InputType type)
 
 DataType DataFrameConfigHelper::ResolveTargetType(std::wstring& confval)
 {
-    if (AreEqualIgnoreCase(confval, L"double"))
+    if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(confval, L"double"))
     {
         return DataType::Double;
     }
-    else if (AreEqualIgnoreCase(confval, L"float"))
+    else if (Microsoft::MSR::CNTK::AreEqualIgnoreCase(confval, L"float"))
     {
         return DataType::Float;
     }

@@ -20,13 +20,14 @@ namespace CNTK { namespace DF {
 
 using namespace std;
 
+/**
 bool DataFrameDeserializer::GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&)
 {
     NOT_IMPLEMENTED;
 }
+**/
 
-
-void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vector<SequenceDescription>& result)
+void DataFrameDeserializer::SequenceInfosForChunk(ChunkIdType chunkId, std::vector<SequenceInfo>& result)
 {
     // nested forloop
     size_t numRowsBeforeChunk = m_rowStartIdxes[chunkId];
@@ -37,7 +38,7 @@ void DataFrameDeserializer::GetSequencesForChunk(ChunkIdType chunkId, std::vecto
     for (size_t row = 0; row < numRows; ++row)
     {
          size_t key = row + numRowsBeforeChunk;
-         result.push_back(SequenceDescription {row, 1, chunkId, SequenceType(key, key)});
+         result.push_back(SequenceInfo {row, 1, chunkId, SequenceKey(key, key)});
     }
 }
 
@@ -124,17 +125,20 @@ std::shared_ptr<FileReader> DataFrameDeserializer::InitializeReader(
     return nullptr;
 }
 
-
+/**
 static SmallVector<size_t> GetDimensionality(const std::shared_ptr<DataType>& dt)
 {
     // TODO: More complicated logic here for vector elements
     return SmallVector<size_t>(1, 1);
 }
+**/
 
+/**
 static StorageFormat GetDensity(const std::shared_ptr<DataType>& dt)
 {
     return StorageFormat::Dense;
 }
+**/
 
 void DataFrameDeserializer::InitializeStreams()
 {
@@ -155,30 +159,32 @@ void DataFrameDeserializer::InitializeStreams()
     }
     */
     // size_t featureDim;
-    StreamDescriptionPtr featureStream = make_shared<StreamDescription>();
-    featureStream->m_id = 0;
-    featureStream->m_name = L"features";
-    featureStream->m_sampleLayout = make_shared<TensorShape>(m_featureDim); // This should have the shape matching the dimensions of the features column
-    featureStream->m_elementType = m_precision;
-    featureStream->m_storageType = m_featureStorageType;
+    StreamInformation featureStream;
+    featureStream.m_id = 0;
+    featureStream.m_name = L"features";
+    featureStream.m_sampleLayout = NDShape(1, m_featureDim); // This should have the shape matching the dimensions of the features column
+    featureStream.m_elementType = m_precision;
+    featureStream.m_storageFormat = m_featureStorageType;
+    featureStream. m_definesMbSize = true;
     m_streams.push_back(featureStream);
 
     // size_t labelDim;
-    StreamDescriptionPtr labelStream = make_shared<StreamDescription>();
-    labelStream->m_id = 1;
-    labelStream->m_name = L"labels";
-    labelStream->m_sampleLayout = make_shared<TensorShape>(m_labelDim); // This should have the shape matching the dimensions of the labels column
-    labelStream->m_elementType = m_precision;
-    labelStream->m_storageType = m_labelStorageType;
+    StreamInformation labelStream;
+    labelStream.m_id = 1;
+    labelStream.m_name = L"labels";
+    labelStream.m_sampleLayout = NDShape(1, m_labelDim); // This should have the shape matching the dimensions of the labels column
+    labelStream.m_elementType = m_precision;
+    labelStream.m_storageFormat = m_labelStorageType;
+    labelStream.m_definesMbSize = true;
     m_streams.push_back(labelStream);
 }
 
 // Gets information about available chunks.
-ChunkDescriptions DataFrameDeserializer::GetChunkDescriptions()
+std::vector<ChunkInfo> DataFrameDeserializer::ChunkInfos()
 {
     // std::cout << "IN DFDS::GETCHUNKDESCRIPTIONS :D" << std::endl;
 
-    ChunkDescriptions chunks;
+    std::vector<ChunkInfo> chunks;
     auto nchunks = m_metadata -> NumberOfRowChunks(); // nchunks == numberOfRowGroups
     
     chunks.reserve(nchunks);
@@ -187,12 +193,7 @@ ChunkDescriptions DataFrameDeserializer::GetChunkDescriptions()
     {
         auto nrowsInChunk = m_metadata -> NumberOfRowsInChunk(i);
         // std::cout << "nrowsInChunk: " << nrowsInChunk << std::endl;
-        std::shared_ptr<ChunkDescription>cd (new ChunkDescription());
-        cd->m_id = i;
-        cd->m_numberOfSamples = nrowsInChunk;
-        // Figure out rowname for Sequence != Sample
-        cd->m_numberOfSequences = nrowsInChunk;
-        chunks.push_back(cd);
+        chunks.push_back(ChunkInfo {i, nrowsInChunk, nrowsInChunk});
     }
     return chunks;
 }

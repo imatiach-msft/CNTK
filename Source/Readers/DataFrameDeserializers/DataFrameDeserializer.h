@@ -30,16 +30,16 @@ public:
     //DataFrameDeserializer(CorpusDescriptorPtr corpus, const ConfigParameters& featureConfig, const std::wstring& featureName, bool primary);
 
     // Get information about chunks.
-    virtual ChunkDescriptions GetChunkDescriptions() override;
+    virtual std::vector<ChunkInfo> ChunkInfos() override;
 
     // Get information about particular chunk.
-    virtual void GetSequencesForChunk(ChunkIdType chunkId, std::vector<SequenceDescription>& result) override;
+    virtual void  SequenceInfosForChunk(ChunkIdType chunkId, std::vector<SequenceInfo>& result) override;
 
     // Retrieves data for a chunk.
     virtual ChunkPtr GetChunk(ChunkIdType chunkId) override;
 
     // Gets sequence description by the primary one.
-    virtual bool GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&) override;
+    // virtual bool GetSequenceDescription(const SequenceDescription& primary, SequenceDescription&) override;
 
 private:
     DISABLE_COPY_AND_MOVE(DataFrameDeserializer);
@@ -52,7 +52,7 @@ private:
 
     // Gets sequence by its chunk id and id inside the chunk.
     // TODO have client implement vector + allocator for return bucket
-    void GetSequenceById(ChunkIdType chunkId, size_t id, std::vector<SequenceDataPtr>& returnData);
+    // void GetSequenceById(ChunkIdType chunkId, size_t id, std::vector<SequenceDataPtr>& returnData);
 
 
     // Type of the features.
@@ -62,7 +62,7 @@ private:
 
     std::shared_ptr<FileReader> m_fileReader;
 
-    TensorShapePtr m_layout;
+    NDShape m_layout;
 
     size_t m_featureDim;
     size_t m_labelDim;
